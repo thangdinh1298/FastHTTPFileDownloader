@@ -1,5 +1,6 @@
 package Controller;
 
+import Downloaders.MultiThreadedDownloader;
 import Downloaders.SingleThreadedDownloader;
 
 import java.io.IOException;
@@ -24,6 +25,7 @@ public class Controller {
             if (supportRange == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
+                MultiThreadedDownloader mTD = new MultiThreadedDownloader(this.url, fileSize);
             }else {
 //                initialize single threaded download
                 SingleThreadedDownloader sTD = new SingleThreadedDownloader(this.url);
