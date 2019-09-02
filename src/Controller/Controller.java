@@ -2,44 +2,58 @@ package Controller;
 
 import Downloaders.MultiThreadedDownloader;
 import Downloaders.SingleThreadedDownloader;
+import Downloaders.DownloadEntry;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class Controller {
-    URL url;
+    private ArrayList<DownloadEntry> entries;
 
-    public Controller(URL url) {
-        //todo: handle malform url from the main function
-        this.url = url;
+    public Controller() {
+        //initialize list of download entries
+        entries = new ArrayList<>();
 
+    }
+
+    //todo: handle malform url from the main function
+    public void addDownload(URL url) {
         try{
-            boolean supportRange = pollForRangeSupport();
-            Integer fileSize = pollForFileSize();
+            boolean supportRange = pollForRangeSupport(url);
+            Integer fileSize = pollForFileSize(url);
 
             System.out.println(supportRange + " " + fileSize);
 
             if (supportRange == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
-                MultiThreadedDownloader mTD = new MultiThreadedDownloader(this.url, fileSize);
+                MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf", 7);
+                entries.add(mTD);
+                mTD.download();
+
+                Thread.sleep(199);
+
+                mTD.pause();
             }else {
 //                initialize single threaded download
-                SingleThreadedDownloader sTD = new SingleThreadedDownloader(this.url);
+                SingleThreadedDownloader sTD = new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
+                entries.add(sTD);
             }
 
         } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
             System.out.println(e.getMessage());
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
-
     }
 
-    private boolean pollForRangeSupport() throws IOException {
+    private boolean pollForRangeSupport(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -56,7 +70,7 @@ public class Controller {
         return false;
     }
 
-    private Integer pollForFileSize() throws IOException {
+    private Integer pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -80,7 +94,9 @@ public class Controller {
 
     public static void main(String[] args) {
         try {
-            Controller controller = new Controller(new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+            Controller controller = new Controller();
+            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
         }

@@ -1,32 +1,33 @@
 package Downloaders;
 
-import jdk.internal.util.xml.impl.Input;
-
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class MultiThreadedDownloader {
-    private URL url;
-    private String path = "downloadDir";
-    private String fileName = "test";
-    private final int THREAD_NUM = 8; // default thread num is 8
+public class MultiThreadedDownloader extends DownloadEntry{
+    private int THREAD_NUM = 8; // default thread num is 8
     private int fileSize;
+    public Thread[] threads;
 
-    public MultiThreadedDownloader(URL url, int fileSize) {
-        this.url = url;
+    //todo: close streams!!!! by handling error inside download function
+    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
+        super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
-        try {
-            download();
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
+        this.THREAD_NUM = THREAD_NUM;
+//        download(de);
+    }
+
+    public void pause() {
+        System.out.println("Pausing");
+        for(Thread t: this.threads){
+            t.interrupt();
         }
     }
 
-    private void download() throws IOException{
-        Thread[] threads = new Thread[this.THREAD_NUM];
-        int segmentSize = fileSize / THREAD_NUM;
-        int leftOver = fileSize % THREAD_NUM;
+    public void download() throws IOException {
+        threads = new Thread[this.THREAD_NUM];
+        int segmentSize = this.fileSize / this.THREAD_NUM;
+        int leftOver = this.fileSize % this.THREAD_NUM;
         int startByte = 0;
         for(int i = 0; i < this.THREAD_NUM; i++){
             if (i < this.THREAD_NUM - 1) threads[i] = new Thread(new DownloadThread(segmentSize, startByte, i));
@@ -40,25 +41,35 @@ public class MultiThreadedDownloader {
                 threads[i].join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
+                System.out.println("Thread " + i + " interrupted");
             }
         }
 
         //join files
         int count = 0;
-        OutputStream os = new BufferedOutputStream(new FileOutputStream(path + "/" + fileName));
-        for (int i = 0; i < this.THREAD_NUM; i++) {
-            System.out.println("Opening file " + path + "/" + fileName + i  + " for reading");
-            InputStream is = new BufferedInputStream(new FileInputStream(path + "/" + fileName + i));
-            int c;
+        OutputStream os = null;
+        InputStream is = null;
+        try {
+            os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
+            for (int i = 0; i < this.THREAD_NUM; i++) {
+                System.out.println("Opening file " + getAbsolutePath() + i  + " for reading");
+                is = new BufferedInputStream(new FileInputStream(getAbsolutePath() + i));
+                int c;
 
-            while((c = is.read()) != -1){
-                count++;
-                os.write(c);
+                while((c = is.read()) != -1){
+                    count++;
+                    os.write(c);
+                }
+                os.flush();
+
             }
-            os.flush();
-
+            System.out.println("File size is " + count);
+        } catch (IOException e) {
+            throw new IOException("Can't open file for merging");
+        } finally{
+            if (os != null) os.close();
+            if (is != null) is.close();
         }
-        System.out.println("File size is " + count);
     }
 
     private class DownloadThread implements Runnable {
@@ -81,7 +92,7 @@ public class MultiThreadedDownloader {
             HttpURLConnection conn = null;
 
             try {
-                conn = (HttpURLConnection)url.openConnection();
+                conn = (HttpURLConnection) downloadLink.openConnection();
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty( "charset", "utf-8");
                 conn.setRequestProperty("Content-Language", "en-US");
@@ -90,7 +101,7 @@ public class MultiThreadedDownloader {
 
                 InputStream is = conn.getInputStream();
 
-                OutputStream os = new BufferedOutputStream(new FileOutputStream(path + "/" + fileName + this.threadID));
+                OutputStream os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID));
                 int c;
                 while((c = is.read()) != -1){
                     os.write(c);
@@ -99,6 +110,8 @@ public class MultiThreadedDownloader {
 
             } catch (IOException e) {
                 System.out.println(e.getMessage());
+            } finally{
+                if (conn != null) conn.disconnect();
             }
         }
     }
