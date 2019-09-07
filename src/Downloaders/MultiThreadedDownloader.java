@@ -20,37 +20,46 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     @Override
-    public void resume() throws OperationNotSupportedException {
-        
-    }
-
-    @Override
     public void pause() throws OperationNotSupportedException{
         synchronized (this){
-            System.out.println("Pausing");
+//            System.out.println("Pausing");
             for(Thread t: this.threads){
-                t.interrupt();
+                if (t != null) t.interrupt();
             }
             tt.interrupt();
         }
     }
 
     public void download() throws IOException {
-        System.out.println("Downloading");
+//        System.out.println("Downloading");
         threads = new Thread[this.THREAD_NUM];
         int segmentSize = this.fileSize / this.THREAD_NUM;
         int leftOver = this.fileSize % this.THREAD_NUM;
-        int startByte = 0;
+        int chunkStartByte = 0;
         for(int i = 0; i < this.THREAD_NUM; i++){
-            if (i < this.THREAD_NUM - 1) threads[i] = new Thread(new DownloadThread(segmentSize, startByte, i));
-            else threads[i] = new Thread(new DownloadThread(segmentSize + leftOver, startByte, i));
-            startByte += segmentSize;
+            int bytesDownloaded = (int) new File(String.format("%s/%s%d", downloadDir, fileName, i)).length();
+            System.out.println("==============================THREAD " + i + "==================================");
+            System.out.println("Numbytes downloaded for thread " + i + " is " + bytesDownloaded);
+            int startByte = chunkStartByte + bytesDownloaded;
+            int chunkSize = segmentSize - bytesDownloaded;
+            if (i == this.THREAD_NUM - 1) chunkSize += leftOver;
+            System.out.println(startByte + " " + chunkSize);
+
+            System.out.println("Now downloading from " + startByte + " to " + (startByte + chunkSize - 1));
+
+            System.out.println("================================================================");
+
+            chunkStartByte += segmentSize;
+            if (chunkSize == 0) continue;
+
+            threads[i] = new Thread(new DownloadThread(chunkSize, startByte, i));
+
             threads[i].start();
         }
 
         for(int i = 0; i < this.THREAD_NUM; i++) {
             try {
-                threads[i].join();
+                if (threads[i] != null) threads[i].join();
             } catch (InterruptedException e) {
                 //immediately returns if download thread is interrupted
                 return;
@@ -96,11 +105,11 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
     private class DownloadThread implements Runnable {
         private int startByte;
-        private int fileSize; //num bytes to download including the start byte
+        private int chunkSize; //num bytes to download including the start byte
         private int threadID;
 
-        public DownloadThread(int fileSize, int startByte, int threadID) {
-            this.fileSize = fileSize;
+        public DownloadThread(int chunkSize, int startByte, int threadID) {
+            this.chunkSize = chunkSize;
             this.startByte = startByte;
             this.threadID = threadID;
         }
@@ -110,7 +119,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
          */
         @Override
         public void run() {
-            System.out.println("Thread " + this.threadID + " is downloading from " + this.startByte + " to " + (startByte + fileSize - 1) );
+//            System.out.println("Thread " + this.threadID + " is downloading from " + this.startByte + " to " + (this.startByte + this.chunkSize - 1) );
             HttpURLConnection conn = null;
             InputStream is = null;
             OutputStream os = null;
@@ -120,12 +129,12 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                 conn.setRequestMethod("GET");
                 conn.setRequestProperty( "charset", "utf-8");
                 conn.setRequestProperty("Content-Language", "en-US");
-                conn.setRequestProperty("Range", "bytes=" + startByte  + "-" + (startByte + fileSize - 1));
+                conn.setRequestProperty("Range", "bytes=" + this.startByte  + "-" + (this.startByte + this.chunkSize - 1));
                 conn.connect();
 
                 is = conn.getInputStream();
 
-                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID));
+                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID, true));
                 int c;
                 int count = 0;
                 while((c = is.read()) != -1 && !Thread.interrupted()){
@@ -138,7 +147,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             } catch (IOException e) {
                 System.out.println(e.getMessage());
             } finally{
-                System.out.println("Interrupted");
+//                System.out.println("Interrupted");
                 if (conn != null) conn.disconnect();
                 if (is != null) {
                     try {
@@ -154,7 +163,6 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                         e.printStackTrace();
                     }
                 }
-                System.out.println("Thread " + this.threadID + " is breaking out of execution");
             }
         }
     }

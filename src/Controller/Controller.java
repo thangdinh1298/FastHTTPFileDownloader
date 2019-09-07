@@ -35,6 +35,9 @@ public class Controller {
             Thread.sleep(800);
 
             de.pause();
+//
+//            Thread.sleep(1000);
+//            ((MultiThreadedDownloader) de).download();
 
         } catch (IOException e) {
             System.out.println(e.getMessage());
