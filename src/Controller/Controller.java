@@ -33,9 +33,12 @@ public class Controller {
                 System.out.println("This supports range");
                 MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf", 7);
                 entries.add(mTD);
-                mTD.download();
+                Thread t = new Thread(mTD);
+                t.start();
 
-                Thread.sleep(199);
+                System.out.println("Main thread sleeping");
+                Thread.sleep(3000);
+                System.out.println("Main thread resumes");
 
                 mTD.pause();
             }else {
