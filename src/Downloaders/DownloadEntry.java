@@ -1,8 +1,9 @@
 package Downloaders;
 
+import javax.naming.OperationNotSupportedException;
 import java.net.URL;
 
-public class DownloadEntry {
+public abstract class DownloadEntry {
     protected URL downloadLink;
     protected String downloadDir;
     protected String fileName;
@@ -36,6 +37,10 @@ public class DownloadEntry {
         return fileName;
     }
 
+    public void resume() throws OperationNotSupportedException {}
+
+    public void pause() throws OperationNotSupportedException { }
+
 
     public String getAbsolutePath() {
         return downloadDir + "/" + fileName;
@@ -44,4 +49,5 @@ public class DownloadEntry {
     protected void setCompleted(){
         completed = true;
     }
+
 }

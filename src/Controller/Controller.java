@@ -1,9 +1,11 @@
 package Controller;
 
+import Downloaders.DownloaderFactory;
 import Downloaders.MultiThreadedDownloader;
 import Downloaders.SingleThreadedDownloader;
 import Downloaders.DownloadEntry;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -26,32 +28,19 @@ public class Controller {
             boolean supportRange = pollForRangeSupport(url);
             Integer fileSize = pollForFileSize(url);
 
-            System.out.println(supportRange + " " + fileSize);
+            DownloadEntry de = DownloaderFactory.getDownloadEntry(supportRange,
+                    fileSize, url, "downloadDir", "test.pdf");
+            entries.add(de);
 
-            if (supportRange == true && fileSize != -1){
-                //initialize multithreaded download
-                System.out.println("This supports range");
-                MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf", 7);
-                entries.add(mTD);
-                Thread t = new Thread(mTD);
-                t.start();
+            Thread.sleep(800);
 
-                System.out.println("Main thread sleeping");
-                Thread.sleep(3000);
-                System.out.println("Main thread resumes");
+            de.pause();
 
-                mTD.pause();
-            }else {
-//                initialize single threaded download
-                SingleThreadedDownloader sTD = new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
-                entries.add(sTD);
-            }
-
-        } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
-            System.out.println(e.getMessage());
         } catch (IOException e) {
             System.out.println(e.getMessage());
         } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (OperationNotSupportedException e) {
             e.printStackTrace();
         }
     }

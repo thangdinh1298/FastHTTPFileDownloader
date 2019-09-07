@@ -1,5 +1,6 @@
 package Downloaders;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -8,19 +9,29 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private int THREAD_NUM = 8; // default thread num is 8
     private int fileSize;
     public Thread[] threads;
+    private Thread tt;
 
     //todo: close streams!!!! by handling error inside download function
-    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
+    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
-        this.THREAD_NUM = THREAD_NUM;
-//        download(de);
+        this.tt = new Thread(this);
+        tt.start();
     }
 
-    public void pause() {
-        System.out.println("Pausing");
-        for(Thread t: this.threads){
-            t.interrupt();
+    @Override
+    public void resume() throws OperationNotSupportedException {
+        
+    }
+
+    @Override
+    public void pause() throws OperationNotSupportedException{
+        synchronized (this){
+            System.out.println("Pausing");
+            for(Thread t: this.threads){
+                t.interrupt();
+            }
+            tt.interrupt();
         }
     }
 
@@ -41,10 +52,11 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             try {
                 threads[i].join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
-                System.out.println("Thread " + i + " interrupted");
+                //immediately returns if download thread is interrupted
+                return;
             }
         }
+
 
         //join files
         int count = 0;
@@ -117,7 +129,6 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                 int c;
                 int count = 0;
                 while((c = is.read()) != -1 && !Thread.interrupted()){
-                    System.out.println("Still downloading");
                     count++;
                     os.write(c);
                 }
@@ -143,6 +154,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                         e.printStackTrace();
                     }
                 }
+                System.out.println("Thread " + this.threadID + " is breaking out of execution");
             }
         }
     }

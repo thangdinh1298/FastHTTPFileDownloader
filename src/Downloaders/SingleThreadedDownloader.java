@@ -1,5 +1,6 @@
 package Downloaders;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -9,6 +10,16 @@ public class SingleThreadedDownloader extends DownloadEntry{
     //todo: close streams!!!! by handling error inside download function
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, false);
+    }
+
+    @Override
+    public void pause() throws OperationNotSupportedException {
+        throw new OperationNotSupportedException("Pause is not available for single-threaded downloads");
+    }
+
+    @Override
+    public void resume() throws OperationNotSupportedException {
+        throw new OperationNotSupportedException();
     }
 
     private void download() throws IOException {
