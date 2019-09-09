@@ -30,6 +30,12 @@ public class Daemon {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")){
+                String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
+                String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");
+                System.out.println(fileName + " " + downloadDir);
+                if (fileName == "" || downloadDir == ""){
+                    Utils.writeResponse(httpExchange, "Please specify the download directory and file name", 400);
+                }
                 InputStream is = httpExchange.getRequestBody();
 
                 int c;
@@ -40,7 +46,7 @@ public class Daemon {
                 System.out.println(body.toString());
                 try{
                     URL url = new URL(body.toString());
-                    Controller.getInstance().addDownload(url);
+                    Controller.getInstance().addDownload(url, fileName, downloadDir);
                     httpExchange.getResponseHeaders().add("Content-Type", "text/html");
                     Utils.writeResponse(httpExchange, "Download added successfully", 200);
                 } catch (MalformedURLException e){

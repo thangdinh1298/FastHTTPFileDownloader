@@ -9,16 +9,16 @@ public class DownloaderFactory {
 
     }
 
-    public static DownloadEntry getDownloadEntry(boolean supportRange, Integer fileSize, URL url, String downloadDir, String fileName){
+    public static DownloadEntry getDownloadEntry(boolean supportRange, Long fileSize, URL url, String downloadDir, String fileName){
         try{
             if (supportRange == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
-                return new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf");
+                return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
             }else {
 //                initialize single threaded download
                 System.out.println("This does not support range");
-                return new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
+                return new SingleThreadedDownloader(url, downloadDir, fileName);
             }
 
         } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException

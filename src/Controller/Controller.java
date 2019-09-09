@@ -31,15 +31,16 @@ public class Controller {
     }
 
     //todo: handle malformed url from the main function
-    public static void addDownload(URL url) {
+    public static void addDownload(URL url, String fileName, String downloadDir) {
+        System.out.println(Controller.entries);
         try{
             boolean supportRange = pollForRangeSupport(url);
-            Integer fileSize = pollForFileSize(url);
+            Long fileSize = pollForFileSize(url);
 
             System.out.println(supportRange + " "  + fileSize);
 
             DownloadEntry de = DownloaderFactory.getDownloadEntry(supportRange,
-                    fileSize, url, "downloadDir", "test.pdf");
+                    fileSize, url, downloadDir, fileName);
             System.out.println("adding entries");
             entries.add(de);
             System.out.println("returning from add download");
@@ -60,18 +61,18 @@ public class Controller {
         int status = conn.getResponseCode();
         System.out.println("Status code is: "+ status);
 
+//        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
+//            System.out.println(m);
+//        }
+
         if (status == HttpURLConnection.HTTP_PARTIAL) {
             return true;
-        }
-
-        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
-            System.out.println(m);
         }
 
         return false;
     }
 
-    private static Integer pollForFileSize(URL url) throws IOException {
+    private static Long pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -80,26 +81,31 @@ public class Controller {
 
         int status = conn.getResponseCode();
 
+//        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
+//            System.out.println(m);
+//        }
+
         if (status == HttpURLConnection.HTTP_OK ){
             if (conn.getHeaderFields().containsKey("Content-Length")) {
                 try {
-                    Integer size = Integer.parseInt(conn.getHeaderFields().get("Content-Length").get(0));
+                    Long size = Long.parseLong(conn.getHeaderFields().get("Content-Length").get(0));
                     return size;
                 } catch (NumberFormatException e) {
-                    return -1;
+                    e.printStackTrace();
+                    return -1l;
                 }
             }
         }
-        return -1;
+        return -1l;
     }
 
     public static void main(String[] args) {
-        try {
-            Controller controller = new Controller();
-            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
-
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
+//        try {
+//            Controller controller = new Controller();
+//            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
+//
+//        } catch (MalformedURLException e) {
+//            System.out.println(e.getMessage());
+//        }
     }
 }

@@ -7,12 +7,12 @@ import java.net.URL;
 
 public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private int THREAD_NUM = 8; // default thread num is 8
-    private int fileSize;
+    private Long fileSize;
     public Thread[] threads;
     private Thread tt;
 
     //todo: close streams!!!! by handling error inside download function
-    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName) throws IOException{
+    public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
         this.tt = new Thread(this);
@@ -33,21 +33,21 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     public void download() throws IOException {
 //        System.out.println("Downloading");
         threads = new Thread[this.THREAD_NUM];
-        int segmentSize = this.fileSize / this.THREAD_NUM;
-        int leftOver = this.fileSize % this.THREAD_NUM;
-        int chunkStartByte = 0;
+        long segmentSize = this.fileSize / this.THREAD_NUM;
+        long leftOver = this.fileSize % this.THREAD_NUM;
+        long chunkStartByte = 0;
         for(int i = 0; i < this.THREAD_NUM; i++){
-            int bytesDownloaded = (int) new File(String.format("%s/%s%d", downloadDir, fileName, i)).length();
-            System.out.println("==============================THREAD " + i + "==================================");
-            System.out.println("Numbytes downloaded for thread " + i + " is " + bytesDownloaded);
-            int startByte = chunkStartByte + bytesDownloaded;
-            int chunkSize = segmentSize - bytesDownloaded;
+            long bytesDownloaded =  new File(String.format("%s/%s%d", downloadDir, fileName, i)).length();
+//            System.out.println("==============================THREAD " + i + "==================================");
+//            System.out.println("Numbytes downloaded for thread " + i + " is " + bytesDownloaded);
+            long startByte = chunkStartByte + bytesDownloaded;
+            long chunkSize = segmentSize - bytesDownloaded;
             if (i == this.THREAD_NUM - 1) chunkSize += leftOver;
-            System.out.println(startByte + " " + chunkSize);
-
-            System.out.println("Now downloading from " + startByte + " to " + (startByte + chunkSize - 1));
-
-            System.out.println("================================================================");
+//            System.out.println(startByte + " " + chunkSize);
+//
+//            System.out.println("Now downloading from " + startByte + " to " + (startByte + chunkSize - 1));
+//
+//            System.out.println("================================================================");
 
             chunkStartByte += segmentSize;
             if (chunkSize == 0) continue;
@@ -104,11 +104,11 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     private class DownloadThread implements Runnable {
-        private int startByte;
-        private int chunkSize; //num bytes to download including the start byte
+        private long startByte;
+        private long chunkSize; //num bytes to download including the start byte
         private int threadID;
 
-        public DownloadThread(int chunkSize, int startByte, int threadID) {
+        public DownloadThread(long chunkSize, long startByte, int threadID) {
             this.chunkSize = chunkSize;
             this.startByte = startByte;
             this.threadID = threadID;
