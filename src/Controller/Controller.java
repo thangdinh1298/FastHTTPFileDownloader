@@ -28,32 +28,40 @@ public class Controller {
 
             System.out.println(supportRange + " " + fileSize);
 
-            if (supportRange == true && fileSize != -1){
+            if (supportRange && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
-                MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf", 7);
+                MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf");
                 entries.add(mTD);
                 Thread t = new Thread(mTD);
+                mTD.setUp();
                 t.start();
 
-                System.out.println("Main thread sleeping");
-                Thread.sleep(3000);
-                System.out.println("Main thread resumes");
-
+//                System.out.println("Main thread sleeping");
+                Thread.sleep(1800);
+//                System.out.println("Main thread resumes");
+//
                 mTD.pause();
+                Thread.sleep(3000);
+                mTD.resume();
             }else {
 //                initialize single threaded download
                 SingleThreadedDownloader sTD = new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
                 entries.add(sTD);
             }
 
-        } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
+        }
+        catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
             System.out.println(e.getMessage());
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             System.out.println(e.getMessage());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+//        catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {
@@ -82,7 +90,7 @@ public class Controller {
 
         int status = conn.getResponseCode();
 
-        if (status == HttpURLConnection.HTTP_OK ){
+        if (status == HttpURLConnection.HTTP_OK ) {
             if (conn.getHeaderFields().containsKey("Content-Length")) {
                 try {
                     Integer size = Integer.parseInt(conn.getHeaderFields().get("Content-Length").get(0));
