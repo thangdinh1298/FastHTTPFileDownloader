@@ -12,7 +12,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private Pair<Long, Long>[] segment;
 
     //todo: close streams!!!! by handling error inside download function
-    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
+    public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
         this.THREAD_NUM = THREAD_NUM;
@@ -20,7 +20,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 //        download(de);
     }
 
-    public MultiThreadedDownloader(URL url, int fileSize, String downloadDir, String fileName) throws IOException{
+    public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
 //        this.THREAD_NUM = THREAD_NUM;

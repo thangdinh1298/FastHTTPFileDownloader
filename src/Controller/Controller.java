@@ -24,7 +24,7 @@ public class Controller {
     public void addDownload(URL url) {
         try{
             boolean supportRange = pollForRangeSupport(url);
-            Integer fileSize = pollForFileSize(url);
+            Long fileSize = pollForFileSize(url);
 
             System.out.println(supportRange + " " + fileSize);
 
@@ -81,7 +81,7 @@ public class Controller {
         return false;
     }
 
-    private Integer pollForFileSize(URL url) throws IOException {
+    private Long pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -93,20 +93,21 @@ public class Controller {
         if (status == HttpURLConnection.HTTP_OK ) {
             if (conn.getHeaderFields().containsKey("Content-Length")) {
                 try {
-                    Integer size = Integer.parseInt(conn.getHeaderFields().get("Content-Length").get(0));
+                    Long size = Long.parseLong(conn.getHeaderFields().get("Content-Length").get(0));
                     return size;
                 } catch (NumberFormatException e) {
-                    return -1;
+                    return (long)-1;
                 }
             }
         }
-        return -1;
+        return (long)-1;
     }
 
     public static void main(String[] args) {
         try {
             Controller controller = new Controller();
-            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
+            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
 
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
