@@ -13,15 +13,28 @@ import java.util.ArrayList;
 
 public class Controller {
     private ArrayList<DownloadEntry> entries;
+    private static Controller controller = null;
 
-    public Controller() {
+    private Controller() {
         //initialize list of download entries
-        entries = new ArrayList<>();
-
+        this.entries = new ArrayList<>();
     }
 
+    public static Controller getInstance(){
+        if(Controller.controller == null){
+            Controller.controller = new Controller();
+        }
+        return Controller.controller;
+    }
+
+    private void download(URL url){}
+
+    private void resume(URL url){}
+
+    private void pause(URL url){}
+
     //todo: handle malform url from the main function
-    public void addDownload(URL url) {
+    private void addDownload(URL url) {
         try{
             boolean supportRange = pollForRangeSupport(url);
             Long fileSize = pollForFileSize(url);
@@ -105,9 +118,10 @@ public class Controller {
 
     public static void main(String[] args) {
         try {
-            Controller controller = new Controller();
-            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
-            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+//            Controller controller = new Controller();
+//            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
+//            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+            Controller.getInstance().addDownload(new URL("https://vnso-zn-5-tf-mp3-s1-zmp3.zadn.vn/119a1af43eb3d7ed8ea2/4147490096273996622?authen=exp=1568127320~acl=/119a1af43eb3d7ed8ea2/*~hmac=b6fa932e7256eb7707da6a3dc53220ea&filename=Buoc-Qua-Doi-Nhau-Le-Bao-Binh.mp3"));
 
         } catch (MalformedURLException e) {
             System.out.println(e.getMessage());
