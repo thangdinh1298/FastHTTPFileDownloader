@@ -12,43 +12,44 @@ import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class Controller {
-    private ArrayList<DownloadEntry> entries;
+    private static ArrayList<DownloadEntry> entries = new ArrayList<>();
+    private static Controller controller = null;
 
-    public Controller() {
-        //initialize list of download entries
-        entries = new ArrayList<>();
-
+    private Controller() {
     }
 
-    //todo: handle malform url from the main function
-    public void addDownload(URL url) {
+    public static Controller getInstance() {
+        if (controller == null) {
+            controller = new Controller();
+            //initialize entries list
+        }
+        return controller;
+    }
+
+    //todo: handle malformed url from the main function
+    public static void addDownload(URL url) {
         try{
             boolean supportRange = pollForRangeSupport(url);
             Integer fileSize = pollForFileSize(url);
 
+            System.out.println(supportRange + " "  + fileSize);
+
             DownloadEntry de = DownloaderFactory.getDownloadEntry(supportRange,
                     fileSize, url, "downloadDir", "test.pdf");
+            System.out.println("adding entries");
             entries.add(de);
-
-            Thread.sleep(800);
-
-            de.pause();
-//
-//            Thread.sleep(1000);
-//            ((MultiThreadedDownloader) de).download();
+            System.out.println("returning from add download");
 
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (OperationNotSupportedException e) {
             e.printStackTrace();
         }
     }
 
-    private boolean pollForRangeSupport(URL url) throws IOException {
+    private static boolean pollForRangeSupport(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -57,15 +58,20 @@ public class Controller {
         conn.connect();
 
         int status = conn.getResponseCode();
+        System.out.println("Status code is: "+ status);
 
         if (status == HttpURLConnection.HTTP_PARTIAL) {
             return true;
         }
 
+        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
+            System.out.println(m);
+        }
+
         return false;
     }
 
-    private Integer pollForFileSize(URL url) throws IOException {
+    private static Integer pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");

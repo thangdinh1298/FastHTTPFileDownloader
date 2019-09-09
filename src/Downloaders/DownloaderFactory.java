@@ -11,13 +11,13 @@ public class DownloaderFactory {
 
     public static DownloadEntry getDownloadEntry(boolean supportRange, Integer fileSize, URL url, String downloadDir, String fileName){
         try{
-            System.out.println(supportRange + " " + fileSize);
             if (supportRange == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
                 return new MultiThreadedDownloader(url, fileSize, "downloadDir", "test.pdf");
             }else {
 //                initialize single threaded download
+                System.out.println("This does not support range");
                 return new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
             }
 
