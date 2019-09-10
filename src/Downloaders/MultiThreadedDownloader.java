@@ -8,7 +8,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private int THREAD_NUM = 8; // default thread num is 8
     private long fileSize;
     private Thread[] threads;
-    private int countThread;
+    private int completedThread;
     private Pair<Long, Long>[] segment;
 
     //todo: close streams!!!! by handling error inside download function
@@ -16,7 +16,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
         this.THREAD_NUM = THREAD_NUM;
-        this.countThread = 0;
+        this.completedThread = 0;
 //        download(de);
     }
 
@@ -24,7 +24,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
 //        this.THREAD_NUM = THREAD_NUM;
-        this.countThread = 0;
+        this.completedThread = 0;
 //        download(de);
     }
 
@@ -90,7 +90,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     private void mergeFile() throws IOException {
-        if(this.countThread == this.THREAD_NUM) {
+        if(this.completedThread == this.THREAD_NUM) {
 
             //join files
             long count = 0;
@@ -189,7 +189,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                 synchronized (this){
                     segment[this.threadID].first = startByte+count;
                     if(segment[this.threadID].first >=  segment[this.threadID].second)
-                        countThread++;
+                        completedThread++;
                 }
 //                System.out.println(segment[this.threadID]);
                 if (conn != null)
