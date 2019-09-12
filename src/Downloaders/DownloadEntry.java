@@ -83,9 +83,11 @@ public class DownloadEntry implements Serializable {
 
         int count = 0;
         for( DownloadEntry e: entries ){
-            System.out.println(e);
-            oos.writeObject(e);
-            count++;
+            if(e != null) {
+                System.out.println(e);
+                oos.writeObject(e);
+                count++;
+            }
         }
         oos.flush();
         oos.close();
