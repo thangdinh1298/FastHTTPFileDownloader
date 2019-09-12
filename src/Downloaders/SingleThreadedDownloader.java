@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class SingleThreadedDownloader extends DownloadEntry{
+public class SingleThreadedDownloader extends DownloadEntry implements Runnable {
 
     //todo: close streams!!!! by handling error inside download function
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, long fileSize) throws IOException{
@@ -38,6 +38,15 @@ public class SingleThreadedDownloader extends DownloadEntry{
             is.close();
             os.close();
             conn.disconnect();
+        }
+    }
+
+    @Override
+    public void run() {
+        try {
+            this.download();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

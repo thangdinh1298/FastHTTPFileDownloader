@@ -58,6 +58,9 @@ public class Daemon {
             if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")){
                 String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
                 String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");
+                String action = httpExchange.getRequestHeaders().getFirst("action");
+
+
                 System.out.println(fileName + " " + downloadDir);
                 if (fileName == "" || downloadDir == ""){
                     Utils.writeResponse(httpExchange, "Please specify the download directory and file name", 400);
@@ -70,15 +73,29 @@ public class Daemon {
                     body.append((char) c);
                 }
                 System.out.println(body.toString());
+
+                URL url;
                 try{
-                    URL url = new URL(body.toString());
-                    Controller.getInstance().download(url, fileName, downloadDir);
-                    httpExchange.getResponseHeaders().add("Content-Type", "text/html");
-                    Utils.writeResponse(httpExchange, "Download added successfully", 200);
+                    url = new URL(body.toString());
                 } catch (MalformedURLException e){
                     Utils.writeResponse(httpExchange, "Invalid URL", 400);
                     return;
                 }
+
+                Controller.getInstance().handler(url, fileName, downloadDir, action);
+                String msg = "nothing to do";
+                if(action.equals("download")){
+                    msg = "Download added successfully";
+
+                }
+                else if(action.equals("pause")){
+                    msg = "pause!";
+                }
+                else if(action.equals("resume")){
+                    msg = "resume!";
+                }
+                httpExchange.getResponseHeaders().add("Content-Type", "text/html");
+                Utils.writeResponse(httpExchange, msg, 200);
             }
 
         }

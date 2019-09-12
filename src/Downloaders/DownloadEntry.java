@@ -105,7 +105,7 @@ public class DownloadEntry implements Serializable {
                 entries.add(de);
             }
         }catch (EOFException e){
-            e.printStackTrace();
+            System.out.println("end of file!!");
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         }

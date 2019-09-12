@@ -32,8 +32,38 @@ public class Controller {
         return entries;
     }
 
-    public void handler(){
+    public void handler(URL url, String filename, String downloadDir, String action) throws IOException {
         //your code here
+        switch (action){
+            case "download":
+                this.download(url, filename, downloadDir);
+                break;
+            case "pause":
+                int id = this.getID(url);
+                if(id != -1)
+                    this.pause(id);
+                break;
+            case "resume":
+                int iD = this.getID(url);
+                if(iD != -1)
+                    this.resume(iD);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private int getID(URL url){
+        int i;
+        DownloadEntry entry;
+        for(i = 0; i < this.entries.size(); ++i){
+            entry = this.entries.get(i);
+            if(entry != null){
+                if(url == entry.getDownloadLink())
+                    return i;
+            }
+        }
+        return -1;
     }
 
     synchronized private int genID(){
@@ -50,16 +80,17 @@ public class Controller {
         return Controller.controller;
     }
 
-    private MultiThreadedDownloader getDownloadEntry(int id){
-        return (MultiThreadedDownloader) this.entries.get(id);
+    private DownloadEntry getDownloadEntry(int id){
+        return this.entries.get(id);
     }
 
     public void download(URL url, String filename, String downloadDir) throws IOException {
         int id = this.addDownload(url, filename, downloadDir);
         DownloadEntry entry = this.entries.get(id);
+        Thread t = new Thread();
         if(entry.isResumable()) {
-            Thread t = new Thread();
-            ((MultiThreadedDownloader) entry).setUp();
+            MultiThreadedDownloader mTD = (MultiThreadedDownloader) entry;
+            mTD.setUp();
             t.start();
         }
         else {
@@ -68,12 +99,16 @@ public class Controller {
 
     }
 
-    public void resume(int id) throws IOException {
-        this.getDownloadEntry(id).resume();
+    private void resume(int id) throws IOException {
+        DownloadEntry entry = this.getDownloadEntry(id);
+        if(entry.isResumable())
+            ((MultiThreadedDownloader) entry).resume();
     }
 
-    public void pause(int id){
-        this.getDownloadEntry(id).pause();
+    private void pause(int id){
+        DownloadEntry entry = this.getDownloadEntry(id);
+        if(entry.isResumable())
+            ((MultiThreadedDownloader) entry).pause();
     }
 
     public void remove(int id){
