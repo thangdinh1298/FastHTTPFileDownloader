@@ -1,9 +1,6 @@
 package Controller;
 
-import Downloaders.MultiThreadedDownloader;
-import Downloaders.Pair;
-import Downloaders.SingleThreadedDownloader;
-import Downloaders.DownloadEntry;
+import Downloaders.*;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -11,24 +8,36 @@ import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Queue;
+import java.util.Stack;
+//import java.util.Queue;
 
 public class Controller {
-    private ArrayList<DownloadEntry> entries;
+    private ArrayList<DownloadEntry> entries = new ArrayList<>();
     private static Controller controller = null;
 
-    private Queue<Integer> avaiableID;
+    private Stack<Integer> avaiableID;
 
     private Controller() {
         //initialize list of download entries
-        this.entries = new ArrayList<>();
+        try {
+            this.entries = EntryHistory.loadHistory("downloadDir/history.dat");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        this.avaiableID = new Stack<>();
     }
+
+    public ArrayList<DownloadEntry> getEntries() {
+        return entries;
+    }
+
+    public void handler(){}
 
     private int genID(){
         if(this.avaiableID.isEmpty()){
             return this.entries.size();
         }
-        return this.avaiableID.poll();
+        return this.avaiableID.pop();
     }
 
     public static Controller getInstance(){
@@ -38,12 +47,12 @@ public class Controller {
         return Controller.controller;
     }
 
-    public void download(URL url, String filename, String downloadDir){
-        this.addDownload(url, filename, downloadDir);
-    }
-
     private MultiThreadedDownloader getDownloadEntry(int id){
         return (MultiThreadedDownloader) this.entries.get(id);
+    }
+
+    public void download(URL url, String filename, String downloadDir){
+        this.addDownload(url, filename, downloadDir);
     }
 
     public void resume(int id) throws IOException {
@@ -95,12 +104,12 @@ public class Controller {
                 t.start();
 
 //                System.out.println("Main thread sleeping");
-                Thread.sleep(1800);
-//                System.out.println("Main thread resumes");
-//
-                mTD.pause();
-                Thread.sleep(3000);
-                mTD.resume();
+//                Thread.sleep(1800);
+////                System.out.println("Main thread resumes");
+////
+//                mTD.pause();
+//                Thread.sleep(3000);
+//                mTD.resume();
             }else {
 //                initialize single threaded download
                 SingleThreadedDownloader sTD = new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
@@ -113,12 +122,7 @@ public class Controller {
         }
         catch (IOException e) {
             System.out.println(e.getMessage());
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
-//        catch (InterruptedException e) {
-//            e.printStackTrace();
-//        }
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {
@@ -160,15 +164,17 @@ public class Controller {
         return (long)-1;
     }
 //
-//    public static void main(String[] args) {
-//        try {
-////            Controller controller = new Controller();
-////            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
-////            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
-//            Controller.getInstance().addDownload(new URL("https://vnso-zn-5-tf-mp3-s1-zmp3.zadn.vn/119a1af43eb3d7ed8ea2/4147490096273996622?authen=exp=1568127320~acl=/119a1af43eb3d7ed8ea2/*~hmac=b6fa932e7256eb7707da6a3dc53220ea&filename=Buoc-Qua-Doi-Nhau-Le-Bao-Binh.mp3"));
-//
-//        } catch (MalformedURLException e) {
-//            System.out.println(e.getMessage());
-//        }
-//    }
+    public static void main(String[] args) {
+        try {
+//            Controller controller = new Controller();
+//            controller.addDownload(
+//            new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
+//            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
+            Controller.getInstance().addDownload(new URL("https://vnno-vn-6-tf-mp3-s1-zmp3.zadn.vn/ed5d01312576cc289567/5313514683599977435?authen=exp=1568218398~acl=/ed5d01312576cc289567/*~hmac=abdff2d14d92f63936e774946234ac57&filename=Ngay-Cho-Thang-Nho-Nam-Thuong-OSAD.mp3"),
+                    "buocquadoinhau.mp3", "downloadDir/");
+
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 }

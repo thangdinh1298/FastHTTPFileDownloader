@@ -7,9 +7,9 @@ import java.net.URL;
 public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private int THREAD_NUM = 8; // default thread num is 8
     private long fileSize;
-    private Thread[] threads;
-    private int completedThread;
-    private Pair<Long, Long>[] segment;
+    transient private Thread[] threads;
+    transient private int completedThread;
+    transient private Pair<Long, Long>[] segment;
 
     //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
@@ -212,4 +212,12 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         }
     }
 
+    @Override
+    public String toString() {
+        return "MultiThreadedDownloader{" +
+                "downloadLink=" + downloadLink +
+                ", downloadDir='" + downloadDir + '\'' +
+                ", fileName='" + fileName + '\'' +
+                '}';
+    }
 }

@@ -2,6 +2,8 @@
 package Daemon;
 
 import Controller.Controller;
+import Downloaders.DownloadEntry;
+import Downloaders.EntryHistory;
 import Util.Utils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -13,17 +15,40 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class Daemon {
+    private static ArrayList<DownloadEntry> entries = new ArrayList<>();
+    private static ExecutorService ex = Executors.newSingleThreadExecutor();
+    private static HttpServer server;
     public Daemon() throws IOException {
         //try different ports
+        Controller.getInstance();//loads the file
         InetAddress localHost = InetAddress.getLoopbackAddress();
         System.out.println(localHost);
         InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
-        HttpServer server = HttpServer.create(sockAddr, 0);
+        server = HttpServer.create(sockAddr, 0);
         server.createContext("/download", new downloadHandler());
-        server.setExecutor(null); // creates a default executor
+        server.createContext("/", new stopHandler());
+        server.setExecutor(ex); // creates a default executor
         server.start();
+
+    }
+
+    static class stopHandler implements HttpHandler{
+
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            System.out.println("Attempting to shutdow ");
+            Daemon.server.stop(0);
+            Daemon.ex.shutdown();
+            System.out.println("Saving your progress");
+            EntryHistory.writeHistory("downloadDir/history.dat", Controller.getInstance().getEntries());
+            System.out.println("Done");
+//            Utils.writeResponse(httpExchange, "Shutdown", 200);
+        }
     }
 
     static class downloadHandler implements HttpHandler{
@@ -55,6 +80,7 @@ public class Daemon {
                     return;
                 }
             }
+
         }
     }
 

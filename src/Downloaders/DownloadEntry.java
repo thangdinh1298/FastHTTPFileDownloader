@@ -1,19 +1,26 @@
 package Downloaders;
 
+import java.io.Serializable;
 import java.net.URL;
 
-public class DownloadEntry {
+public class DownloadEntry implements Serializable {
     protected URL downloadLink;
     protected String downloadDir;
     protected String fileName;
     protected boolean completed;
     protected boolean resumable;
+    protected long timeRemainning;//seconds
+    protected float speed;//kb / s
+    protected long totalTimeDownloading;//seconds
 
     public DownloadEntry(URL downloadLink, String downloadDir, String fileName, boolean resumable) {
         this.downloadLink = downloadLink;
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
+        this.timeRemainning = -1;
+        this.speed = 0;
+        this.totalTimeDownloading = 0;
     }
 
     public boolean isCompleted(){
@@ -41,7 +48,21 @@ public class DownloadEntry {
         return downloadDir + "/" + fileName;
     }
 
+    public long getTimeRemainning() {
+        return timeRemainning;
+    }
+
+    public float getSpeed() {
+        return speed;
+    }
+
+    public long getTotalTimeDownloading() {
+        return totalTimeDownloading;
+    }
+
     protected void setCompleted(){
         completed = true;
     }
+
+
 }
