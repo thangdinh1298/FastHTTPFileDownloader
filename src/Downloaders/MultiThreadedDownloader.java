@@ -5,25 +5,22 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
-    private int THREAD_NUM = 8; // default thread num is 8
-    private long fileSize;
     transient private Thread[] threads;
     transient private int completedThread;
     transient private Pair<Long, Long>[] segment;
 
     //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
-        super(url, downloadDir, fileName, true);
-        this.fileSize = fileSize;
+        super(url, downloadDir, fileName, fileSize, true);
         this.THREAD_NUM = THREAD_NUM;
         this.completedThread = 0;
 //        download(de);
     }
 
     public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName) throws IOException{
-        super(url, downloadDir, fileName, true);
+        super(url, downloadDir, fileName, fileSize, true);
         this.fileSize = fileSize;
-//        this.THREAD_NUM = THREAD_NUM;
+        this.THREAD_NUM = 8;
         this.completedThread = 0;
 //        download(de);
     }
@@ -211,13 +208,5 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             }
         }
     }
-
-    @Override
-    public String toString() {
-        return "MultiThreadedDownloader{" +
-                "downloadLink=" + downloadLink +
-                ", downloadDir='" + downloadDir + '\'' +
-                ", fileName='" + fileName + '\'' +
-                '}';
-    }
+    
 }

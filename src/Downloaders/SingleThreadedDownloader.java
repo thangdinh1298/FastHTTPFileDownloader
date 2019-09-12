@@ -7,8 +7,8 @@ import java.net.URL;
 public class SingleThreadedDownloader extends DownloadEntry{
 
     //todo: close streams!!!! by handling error inside download function
-    public SingleThreadedDownloader(URL url, String downloadDir, String fileName) throws IOException{
-        super(url, downloadDir, fileName, false);
+    public SingleThreadedDownloader(URL url, String downloadDir, String fileName, long fileSize) throws IOException{
+        super(url, downloadDir, fileName, fileSize,false);
     }
 
     private void download() throws IOException {

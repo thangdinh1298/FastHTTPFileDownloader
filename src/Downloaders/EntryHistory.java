@@ -30,8 +30,6 @@ public class EntryHistory {
             System.out.println(entries);
             return entries;
         }
-
-
     }
 
     public static void writeHistory(String fileName, ArrayList<DownloadEntry> entries) throws IOException {
