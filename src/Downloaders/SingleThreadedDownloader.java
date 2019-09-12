@@ -11,7 +11,7 @@ public class SingleThreadedDownloader extends DownloadEntry{
         super(url, downloadDir, fileName, fileSize,false);
     }
 
-    private void download() throws IOException {
+    public void download() throws IOException {
         HttpURLConnection conn = null;
         InputStream is = null;
         OutputStream os = null;

@@ -13,6 +13,7 @@ import java.util.Stack;
 
 public class Controller {
     private ArrayList<DownloadEntry> entries = new ArrayList<>();
+    private String historyFile = "downloadDir/history.dat";
     private static Controller controller = null;
 
     private Stack<Integer> avaiableID;
@@ -20,7 +21,7 @@ public class Controller {
     private Controller() {
         //initialize list of download entries
         try {
-            this.entries = EntryHistory.loadHistory("downloadDir/history.dat");
+            this.entries = DownloadEntry.loadHistory(this.historyFile);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -31,9 +32,11 @@ public class Controller {
         return entries;
     }
 
-    public void handler(){}
+    public void handler(){
+        //your code here
+    }
 
-    private int genID(){
+    synchronized private int genID(){
         if(this.avaiableID.isEmpty()){
             return this.entries.size();
         }
@@ -51,8 +54,18 @@ public class Controller {
         return (MultiThreadedDownloader) this.entries.get(id);
     }
 
-    public void download(URL url, String filename, String downloadDir){
-        this.addDownload(url, filename, downloadDir);
+    public void download(URL url, String filename, String downloadDir) throws IOException {
+        int id = this.addDownload(url, filename, downloadDir);
+        DownloadEntry entry = this.entries.get(id);
+        if(entry.isResumable()) {
+            Thread t = new Thread();
+            ((MultiThreadedDownloader) entry).setUp();
+            t.start();
+        }
+        else {
+            ((SingleThreadedDownloader) entry).download();
+        }
+
     }
 
     public void resume(int id) throws IOException {
@@ -65,6 +78,10 @@ public class Controller {
 
     public void remove(int id){
         this.entries.set(id, null);
+    }
+
+    public void writeHistory() throws IOException {
+        DownloadEntry.writeHistory(this.historyFile, this.entries);
     }
 
     private ArrayList<Pair<String, Integer>> getListDownloadEntry(){
@@ -81,27 +98,20 @@ public class Controller {
     }
 
     //todo: handle malform url from the main function
-    private void addDownload(URL url, String filename, String downloadDir) {
+    synchronized private int addDownload(URL url, String filename, String downloadDir) {
+        int id = this.genID();
         try{
             boolean supportRange = pollForRangeSupport(url);
             Long fileSize = pollForFileSize(url);
 
             System.out.println(supportRange + " " + fileSize);
 
+            DownloadEntry entry;
             if (supportRange && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
-                MultiThreadedDownloader mTD = new MultiThreadedDownloader(url, fileSize, downloadDir, filename);
-                int id = this.genID();
-                if(id < this.entries.size()){
-                    this.entries.set(id, mTD);
-                }
-                else
-                    this.entries.add(mTD);
+                entry = new MultiThreadedDownloader(url, fileSize, downloadDir, filename);
 
-                Thread t = new Thread(mTD);
-                mTD.setUp();
-                t.start();
 
 //                System.out.println("Main thread sleeping");
 //                Thread.sleep(1800);
@@ -112,10 +122,14 @@ public class Controller {
 //                mTD.resume();
             }else {
 //                initialize single threaded download
-                SingleThreadedDownloader sTD = new SingleThreadedDownloader(url, "test.pdf", "downloadDir");
-                entries.add(sTD);
-            }
+                entry = new SingleThreadedDownloader(url, "test.pdf", "downloadDir", fileSize);
 
+            }
+            if(id < this.entries.size()){
+                this.entries.set(id, entry);
+            }
+            else
+                this.entries.add(entry);
         }
         catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
             System.out.println(e.getMessage());
@@ -123,6 +137,7 @@ public class Controller {
         catch (IOException e) {
             System.out.println(e.getMessage());
         }
+        return id;
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {

@@ -208,5 +208,26 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             }
         }
     }
-    
+
+    public void loadSegment() throws IOException {
+        int i = 0;
+        this.completedThread = 0;
+        this.segment = new Pair[this.THREAD_NUM];
+        long segmentSize = this.fileSize/this.THREAD_NUM;
+        long startByte = 0;
+        long endByte = segmentSize-1;
+        long bytesDownloaded = 0;
+        while(i<this.THREAD_NUM){
+            bytesDownloaded = new File(String.format("%s/%s%d", this.downloadDir, this.fileName, i)).length();
+
+            startByte += segmentSize;
+            if(i != this.THREAD_NUM-1){
+                endByte = fileSize-1;
+            }
+            else
+                endByte = startByte+segmentSize-1;
+            this.segment[i] = new Pair<>(startByte+bytesDownloaded, endByte);
+            ++i;
+        }
+    }
 }

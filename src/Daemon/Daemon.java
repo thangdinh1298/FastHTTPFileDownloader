@@ -45,7 +45,7 @@ public class Daemon {
             Daemon.server.stop(0);
             Daemon.ex.shutdown();
             System.out.println("Saving your progress");
-            EntryHistory.writeHistory("downloadDir/history.dat", Controller.getInstance().getEntries());
+            Controller.getInstance().writeHistory();
             System.out.println("Done");
 //            Utils.writeResponse(httpExchange, "Shutdown", 200);
         }
