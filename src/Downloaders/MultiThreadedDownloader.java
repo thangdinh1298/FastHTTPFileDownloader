@@ -8,6 +8,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     transient private Thread[] threads;
     transient private int completedThread;
     transient private Pair<Long, Long>[] segment;
+    transient private boolean downloading = false;
 
     //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
@@ -26,11 +27,16 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     public void pause() {
-        System.out.println("Pausing");
-        for(Thread t: this.threads){
-            if(t != null)
-                t.interrupt();
+        if (this.downloading) {
+            this.downloading = false;
+            System.out.println("Pausing");
+            for (Thread t : this.threads) {
+                if (t != null)
+                    t.interrupt();
+            }
         }
+        else
+            System.out.println("Paused!!");
     }
 
     public void setUp(){
@@ -82,8 +88,13 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     public void resume() throws IOException {
-        System.out.println("resume downloading!!");
-        this.download();
+        if(!this.downloading) {
+            this.downloading = true;
+            System.out.println("resume downloading!!");
+            this.loadSegment();
+        }
+        else
+            System.out.println("downloading!!");
     }
 
     private void mergeFile() throws IOException {
@@ -123,6 +134,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     @Override
     public void run() {
         try {
+            this.downloading = true;
             this.download();
         } catch (IOException e) {
             e.printStackTrace();
@@ -167,7 +179,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
                 is = conn.getInputStream();
 
-                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID));
+                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID, true));
                 int c;
 
                 while(count < this.segmentSize && (c = is.read()) != -1 && !Thread.interrupted()){
@@ -185,7 +197,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                     System.out.println("Interrupted");
                 synchronized (this){
                     segment[this.threadID].first = startByte+count;
-                    if(segment[this.threadID].first >=  segment[this.threadID].second)
+                    if(segment[this.threadID].first >  segment[this.threadID].second)
                         completedThread++;
                 }
 //                System.out.println(segment[this.threadID]);
@@ -210,23 +222,31 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     public void loadSegment() throws IOException {
+        System.out.println("thread num: "+this.THREAD_NUM);
+        System.out.println("file size: "+this.fileSize);
         int i = 0;
         this.completedThread = 0;
+        this.downloading = false;
         this.segment = new Pair[this.THREAD_NUM];
+        this.threads = new Thread[this.THREAD_NUM];
         long segmentSize = this.fileSize/this.THREAD_NUM;
-        long startByte = 0;
-        long endByte = segmentSize-1;
+        long startByte = -segmentSize;
+        long endByte = 0;
         long bytesDownloaded = 0;
         while(i<this.THREAD_NUM){
             bytesDownloaded = new File(String.format("%s/%s%d", this.downloadDir, this.fileName, i)).length();
 
             startByte += segmentSize;
             if(i != this.THREAD_NUM-1){
-                endByte = fileSize-1;
+                endByte = startByte+segmentSize-1;
             }
             else
-                endByte = startByte+segmentSize-1;
+                endByte = this.fileSize-1;
+
+            if(startByte + bytesDownloaded >  endByte)
+                this.completedThread++;
             this.segment[i] = new Pair<>(startByte+bytesDownloaded, endByte);
+
             ++i;
         }
     }

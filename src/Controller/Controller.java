@@ -32,41 +32,61 @@ public class Controller {
         return entries;
     }
 
-    public void handler(URL url, String filename, String downloadDir, String action) throws IOException {
+    public int handler(int id, URL url, String filename, String downloadDir, String action) throws IOException {
         //your code here
         switch (action){
             case "download":
-                this.download(url, filename, downloadDir);
+                id = this.download(url, filename, downloadDir);
                 break;
             case "pause":
-                int id = this.getID(url);
-                if(id != -1)
+//                int id = this.getID(url);
+                if(this.check(id, url, filename, downloadDir)) {
+                    System.out.println("pause id:"+id);
                     this.pause(id);
+                }
                 break;
             case "resume":
-                int iD = this.getID(url);
-                if(iD != -1)
-                    this.resume(iD);
+//                int iD = this.getID(url);
+                if(this.check(id, url, filename, downloadDir)) {
+                    System.out.println("pause id:" + id);
+                    this.resume(id);
+                }
                 break;
             default:
                 break;
         }
+        return id;
     }
 
-    private int getID(URL url){
-        int i;
-        DownloadEntry entry;
-        for(i = 0; i < this.entries.size(); ++i){
-            entry = this.entries.get(i);
-            if(entry != null){
-                if(url == entry.getDownloadLink())
-                    return i;
-            }
-        }
-        return -1;
+    private boolean check(int id, URL url, String filename, String downloadDir){
+        if(id >= this.entries.size() || id < 0)
+            return false;
+        DownloadEntry entry = this.entries.get(id);
+        if(entry == null)
+            return false;
+        if(!url.equals(entry.getDownloadLink()))
+            return false;
+        if(!filename.equals(entry.getFileName()))
+            return false;
+        if(!downloadDir.equals(entry.getDownloadDir()))
+            return false;
+        return true;
     }
 
-    synchronized private int genID(){
+//    private int getID(URL url){
+//        int i;
+//        DownloadEntry entry;
+//        for(i = 0; i < this.entries.size(); ++i){
+//            entry = this.entries.get(i);
+//            if(entry != null){
+//                if(url.equals(entry.getDownloadLink()))
+//                    return i;
+//            }
+//        }
+//        return -1;
+//    }
+
+    synchronized public int genID(){
         if(this.avaiableID.isEmpty()){
             return this.entries.size();
         }
@@ -84,25 +104,32 @@ public class Controller {
         return this.entries.get(id);
     }
 
-    public void download(URL url, String filename, String downloadDir) throws IOException {
+    public int download(URL url, String filename, String downloadDir) throws IOException {
         int id = this.addDownload(url, filename, downloadDir);
+
         DownloadEntry entry = this.entries.get(id);
-        Thread t = new Thread();
         if(entry.isResumable()) {
             MultiThreadedDownloader mTD = (MultiThreadedDownloader) entry;
+            Thread t = new Thread(mTD);
             mTD.setUp();
             t.start();
         }
         else {
-            ((SingleThreadedDownloader) entry).download();
+            SingleThreadedDownloader sTD = (SingleThreadedDownloader) entry;
+            Thread t = new Thread(sTD);
+            t.start();
         }
-
+        return id;
     }
 
     private void resume(int id) throws IOException {
         DownloadEntry entry = this.getDownloadEntry(id);
-        if(entry.isResumable())
-            ((MultiThreadedDownloader) entry).resume();
+        if(entry.isResumable()) {
+            MultiThreadedDownloader mTD = (MultiThreadedDownloader) entry;
+            mTD.resume();
+            Thread t = new Thread(mTD);
+            t.start();
+        }
     }
 
     private void pause(int id){
@@ -215,16 +242,16 @@ public class Controller {
     }
 //
     public static void main(String[] args) {
-        try {
+//        try {
 //            Controller controller = new Controller();
 //            controller.addDownload(
 //            new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
 //            //https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
-            Controller.getInstance().addDownload(new URL("https://vnno-vn-6-tf-mp3-s1-zmp3.zadn.vn/ed5d01312576cc289567/5313514683599977435?authen=exp=1568218398~acl=/ed5d01312576cc289567/*~hmac=abdff2d14d92f63936e774946234ac57&filename=Ngay-Cho-Thang-Nho-Nam-Thuong-OSAD.mp3"),
-                    "buocquadoinhau.mp3", "downloadDir/");
+//            Controller.getInstance().addDownload(new URL("https://vnno-vn-6-tf-mp3-s1-zmp3.zadn.vn/ed5d01312576cc289567/5313514683599977435?authen=exp=1568218398~acl=/ed5d01312576cc289567/*~hmac=abdff2d14d92f63936e774946234ac57&filename=Ngay-Cho-Thang-Nho-Nam-Thuong-OSAD.mp3"),
+//                    "buocquadoinhau.mp3", "downloadDir/");
 
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
+//        } catch (MalformedURLException e) {
+//            System.out.println(e.getMessage());
+//        }
     }
 }

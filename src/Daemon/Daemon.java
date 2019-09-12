@@ -31,10 +31,9 @@ public class Daemon {
         InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
         server = HttpServer.create(sockAddr, 0);
         server.createContext("/download", new downloadHandler());
-        server.createContext("/", new stopHandler());
+        server.createContext("/stop", new stopHandler());
         server.setExecutor(ex); // creates a default executor
         server.start();
-
     }
 
     static class stopHandler implements HttpHandler{
@@ -59,7 +58,7 @@ public class Daemon {
                 String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
                 String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");
                 String action = httpExchange.getRequestHeaders().getFirst("action");
-
+                String strID = httpExchange.getRequestHeaders().getFirst("id");
 
                 System.out.println(fileName + " " + downloadDir);
                 if (fileName == "" || downloadDir == ""){
@@ -82,18 +81,23 @@ public class Daemon {
                     return;
                 }
 
-                Controller.getInstance().handler(url, fileName, downloadDir, action);
+                if(action.equals("download"))
+                    strID = "0";
+
+                int id = Controller.getInstance().handler(Integer.parseInt(strID), url, fileName, downloadDir, action);
+
                 String msg = "nothing to do";
                 if(action.equals("download")){
-                    msg = "Download added successfully";
+                    msg = "Download added successfully, id = " + id;
 
                 }
                 else if(action.equals("pause")){
-                    msg = "pause!";
+                    msg = id + " pause!";
                 }
                 else if(action.equals("resume")){
-                    msg = "resume!";
+                    msg = id + " resume!";
                 }
+
                 httpExchange.getResponseHeaders().add("Content-Type", "text/html");
                 Utils.writeResponse(httpExchange, msg, 200);
             }
