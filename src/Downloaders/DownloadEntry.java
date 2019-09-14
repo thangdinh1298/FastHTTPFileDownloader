@@ -17,6 +17,8 @@ public abstract class DownloadEntry {
         this.resumable = resumable;
     }
 
+    public void initDownload() {};
+
     public boolean isCompleted(){
         return completed;
     }

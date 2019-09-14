@@ -8,31 +8,58 @@ import java.net.URL;
 public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private int THREAD_NUM = 8; // default thread num is 8
     private Long fileSize;
-    public Thread[] threads;
-    private Thread tt;
+    private Thread[] threads;
+    private Thread thisThread;
 
     //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
-        this.tt = new Thread(this);
-        tt.start();
+        this.thisThread = new Thread(this);
+    }
+
+    @Override
+    public void run() {
+        try {
+            this.download();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void initDownload() {
+        thisThread.start();
+    }
+
+    @Override
+    public void resume() throws OperationNotSupportedException {
+        thisThread.start();
     }
 
     @Override
     public void pause() throws OperationNotSupportedException{
         synchronized (this){
-//            System.out.println("Pausing");
             for(Thread t: this.threads){
                 if (t != null) t.interrupt();
             }
-            tt.interrupt();
+            thisThread.interrupt();
+        }
+
+        // wait for all threads to enter terminated state
+        try {
+            thisThread.join();
+            for (Thread t: this.threads){
+                t.join();
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
-    public void download() throws IOException {
-//        System.out.println("Downloading");
+    private void download() throws IOException {
         threads = new Thread[this.THREAD_NUM];
+
         long segmentSize = this.fileSize / this.THREAD_NUM;
         long leftOver = this.fileSize % this.THREAD_NUM;
         long chunkStartByte = 0;
@@ -83,7 +110,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                     os.write(c);
                 }
                 os.flush();
-
+                is.close(); /* ?? */
             }
             System.out.println("File size is " + count);
         } catch (IOException e) {
@@ -95,12 +122,8 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     @Override
-    public void run() {
-        try {
-            this.download();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public String toString() {
+        return "Multithreaded downloader";
     }
 
     private class DownloadThread implements Runnable {
@@ -166,5 +189,4 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             }
         }
     }
-
 }

@@ -5,11 +5,27 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class SingleThreadedDownloader extends DownloadEntry{
+public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
+    private Thread thisThread;
 
     //todo: close streams!!!! by handling error inside download function
-    public SingleThreadedDownloader(URL url, String downloadDir, String fileName) throws IOException{
-        super(url, downloadDir, fileName, false);
+    public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
+        super(url, downloadDir, fileName, resumable);
+        thisThread = new Thread(this);
+    }
+
+    @Override
+    public void run() {
+        try {
+            this.download();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void initDownload() {
+        thisThread.start();
     }
 
     @Override
@@ -20,6 +36,11 @@ public class SingleThreadedDownloader extends DownloadEntry{
     @Override
     public void resume() throws OperationNotSupportedException {
         throw new OperationNotSupportedException();
+    }
+
+    @Override
+    public String toString() {
+        return "SingleThreaded downloader";
     }
 
     private void download() throws IOException {
@@ -51,4 +72,5 @@ public class SingleThreadedDownloader extends DownloadEntry{
             conn.disconnect();
         }
     }
+
 }

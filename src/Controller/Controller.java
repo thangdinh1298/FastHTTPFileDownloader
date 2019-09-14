@@ -1,15 +1,11 @@
 package Controller;
 
 import Downloaders.DownloaderFactory;
-import Downloaders.MultiThreadedDownloader;
-import Downloaders.SingleThreadedDownloader;
 import Downloaders.DownloadEntry;
 
-import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.NoRouteToHostException;
+
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +37,7 @@ public class Controller {
 
             DownloadEntry de = DownloaderFactory.getDownloadEntry(supportRange,
                     fileSize, url, downloadDir, fileName);
+            de.initDownload();
             System.out.println("adding entries");
             entries.add(de);
             System.out.println("returning from add download");
@@ -61,10 +58,6 @@ public class Controller {
         int status = conn.getResponseCode();
         System.out.println("Status code is: "+ status);
 
-//        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
-//            System.out.println(m);
-//        }
-
         if (status == HttpURLConnection.HTTP_PARTIAL) {
             return true;
         }
@@ -81,10 +74,6 @@ public class Controller {
 
         int status = conn.getResponseCode();
 
-//        for (Map.Entry<String, List<String>> m: conn.getHeaderFields().entrySet()){
-//            System.out.println(m);
-//        }
-
         if (status == HttpURLConnection.HTTP_OK ){
             if (conn.getHeaderFields().containsKey("Content-Length")) {
                 try {
@@ -97,6 +86,10 @@ public class Controller {
             }
         }
         return -1l;
+    }
+
+    public static ArrayList<DownloadEntry> getEntries(){
+        return entries;
     }
 
     public static void main(String[] args) {

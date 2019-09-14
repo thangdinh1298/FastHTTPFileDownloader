@@ -1,20 +1,27 @@
 package Daemon;
 
 import Controller.Controller;
+import Downloaders.DownloadEntry;
 import Util.Utils;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import javax.rmi.CORBA.Util;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 
 public class Daemon {
     public Daemon() throws IOException {
+        Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
+
         //try different ports
         InetAddress localHost = InetAddress.getLoopbackAddress();
         System.out.println(localHost);
@@ -32,8 +39,9 @@ public class Daemon {
             if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")){
                 String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
                 String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");
+
                 System.out.println(fileName + " " + downloadDir);
-                if (fileName == "" || downloadDir == ""){
+                if (fileName == "" || downloadDir == "" || fileName == null || downloadDir == null){
                     Utils.writeResponse(httpExchange, "Please specify the download directory and file name", 400);
                 }
                 InputStream is = httpExchange.getRequestBody();
@@ -54,6 +62,27 @@ public class Daemon {
                     return;
                 }
             }
+            else if (httpExchange.getRequestMethod().equalsIgnoreCase("GET")){
+                ArrayList<DownloadEntry> entries = Controller.getEntries();
+
+                System.out.println(entries);
+
+                StringBuilder response = new StringBuilder();
+
+                for(DownloadEntry entry: entries){
+                    response.append(entry.toString() + '\n');
+                }
+
+                Utils.writeResponse(httpExchange, response.toString(), 200);
+            }
+        }
+    }
+
+    static class pauseHandler implements HttpHandler{
+
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+
         }
     }
 
