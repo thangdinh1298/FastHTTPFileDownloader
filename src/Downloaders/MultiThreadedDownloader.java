@@ -113,8 +113,8 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             try {
                 os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
                 for (int i = 0; i < this.THREAD_NUM; i++) {
-                    System.out.println("Opening file " + getAbsolutePath() + i + " for reading");
-                    is = new BufferedInputStream(new FileInputStream(getAbsolutePath() + i));
+                    System.out.println("Opening file " + String.format("%s/~%sS%d", downloadDir, fileName, i));
+                    is = new BufferedInputStream(new FileInputStream(String.format("%s/~%sS%d", downloadDir, fileName, i)));
                     int c;
 
                     while ((c = is.read()) != -1) {

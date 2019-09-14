@@ -2,6 +2,7 @@ package Controller;
 
 import Downloaders.*;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -25,7 +26,11 @@ public class Controller {
         //initialize list of download entries
         try {
             this.entries = DownloadEntry.loadHistory(this.historyFile);
-        } catch (IOException e) {
+        }
+        catch (FileNotFoundException e){
+            System.out.println("file dosen't exist!");
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
         this.avaiableID = new Stack<>();

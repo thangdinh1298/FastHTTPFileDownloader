@@ -9,15 +9,18 @@ import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
 
 public class Client {
     private CloseableHttpClient httpClient;
     private Map<Integer, DownloadInfo> downloadInfoMap;
+    private Scanner input;
 
     private String severURL = "http://localhost:8080/download";
     private String stopServerURL = "http://localhost:8080/stop";
@@ -25,10 +28,11 @@ public class Client {
     public Client(){
         this.httpClient = HttpClients.createDefault();
         this.downloadInfoMap = new HashMap<>();
+        this.input = new Scanner(System.in);
     }
 
-    public void stopServer(){
-        this.post(this.stopServerURL, 0,"null", "null", "null", "null");
+    public void stopServer() {
+        this.post(this.stopServerURL, 0, "null", "null", "null", "null");
     }
 
     public void post(int id, String url, String filename, String downloadDir, String action){
@@ -53,9 +57,14 @@ public class Client {
                 try(InputStream inputStream = httpEntity.getContent()){
                     ObjectInputStream ois = new ObjectInputStream(inputStream);
                     DownloadInfo info;
-                    while((info = (DownloadInfo) ois.readObject()) != null ) {
-                        this.downloadInfoMap.put(info.getId(), info);
-                        this.displayDownload(info.getId());
+                    try {
+                        while ((info = (DownloadInfo) ois.readObject()) != null) {
+                            this.downloadInfoMap.put(info.getId(), info);
+                            this.displayDownload(info.getId());
+                        }
+                    }
+                    catch (EOFException e){
+                        System.out.println("end of file!");
                     }
 
 //                    int i;
@@ -110,25 +119,68 @@ public class Client {
         String filename = "filename";
         String downloadDir = "downloadDir";
         String action = "download";
-        this.post(-1, url, filename, downloadDir, action);
+        this.post(0, url, filename, downloadDir, action);
     }
 
-    private void pause(int id){
+    private void pause(){
+        System.out.println("enter id paused!");
+        int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
         this.post(0, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "pause");
     }
 
-    private void resume(int id){
+    private void resume(){
+        System.out.println("enter id resumed!");
+        int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
         this.post(0, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "resume");
     }
 
     private void update(){
+        System.out.println("updating ...");
         this.post(-1, "none", "none", "none", "update");
+        this.displayDownloads();
+        System.out.println("updated!!");
     }
 
     public void run(){
-
+        int command;
+        boolean exist = false;
+        while(!exist){
+            System.out.println("--------------options----------------");
+            System.out.println("1: add download");
+            System.out.println("2: pause");
+            System.out.println("3: resume");
+            System.out.println("4: print all history");
+            System.out.println("5: update history//downloading info");
+            System.out.println("6: close server");
+            System.out.println("Enter number to execute command!");
+            command = this.input.nextInt();
+            switch (command){
+                case 1:
+                    this.download();
+                    break;
+                case 2:
+                    this.pause();
+                    break;
+                case 3:
+                    this.resume();
+                    break;
+                case 4:
+                    this.displayDownloads();
+                    break;
+                case 5:
+                    this.update();
+                    break;
+                case 6:
+                    exist = true;
+                    this.stopServer();
+                    break;
+                default:
+                    System.out.println("*****out of commands!*********");
+                    break;
+            }
+        }
     }
 
 
@@ -140,8 +192,12 @@ public class Client {
         String action = "download";
 
         Client client = new Client();
-//        client.post(0, url, filename, downloadDir, action);
-        client.stopServer();
+        client.post(0, url, filename, downloadDir, action);
+//        client.stopServer();
         client.close();
+
+//        Client client = new Client();
+//        client.run();
+//        client.close();
     }
 }
