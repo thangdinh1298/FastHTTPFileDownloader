@@ -3,6 +3,7 @@ package Daemon;
 
 import Controller.Controller;
 import Downloaders.DownloadEntry;
+import Downloaders.DownloadInfo;
 import Downloaders.EntryHistory;
 import Util.Utils;
 import com.sun.net.httpserver.HttpExchange;
@@ -46,6 +47,7 @@ public class Daemon {
             System.out.println("Saving your progress");
             Controller.getInstance().writeHistory();
             System.out.println("Done");
+
 //            Utils.writeResponse(httpExchange, "Shutdown", 200);
         }
     }
@@ -84,22 +86,22 @@ public class Daemon {
                 if(action.equals("download"))
                     strID = "0";
 
-                int id = Controller.getInstance().handler(Integer.parseInt(strID), url, fileName, downloadDir, action);
+                DownloadInfo info = (DownloadInfo)Controller.getInstance().handler(Integer.parseInt(strID), url, fileName, downloadDir, action);
 
-                String msg = "nothing to do";
-                if(action.equals("download")){
-                    msg = "Download added successfully, id = " + id;
-
-                }
-                else if(action.equals("pause")){
-                    msg = id + " pause!";
-                }
-                else if(action.equals("resume")){
-                    msg = id + " resume!";
-                }
+//                String msg = "nothing to do";
+//                if(action.equals("download")){
+//                    msg = "Download added successfully, id = " + id;
+//
+//                }
+//                else if(action.equals("pause")){
+//                    msg = info + " pause!";
+//                }
+//                else if(action.equals("resume")){
+//                    msg = id + " resume!";
+//                }
 
                 httpExchange.getResponseHeaders().add("Content-Type", "text/html");
-                Utils.writeResponse(httpExchange, msg, 200);
+                Utils.writeResponse(httpExchange, info, 200);
             }
 
         }

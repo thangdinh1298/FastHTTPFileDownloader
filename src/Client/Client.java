@@ -1,6 +1,7 @@
 package Client;
 
 //import org.apache.hc.client5.http.classic.methods.HttpGet;
+import Downloaders.DownloadInfo;
 import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
@@ -10,9 +11,11 @@ import org.apache.hc.core5.http.io.entity.StringEntity;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ObjectInputStream;
 
 public class Client {
     private CloseableHttpClient httpClient;
+//    private ArrayList<>
 
     private String severURL = "http://localhost:8080/download";
     private String stopServerURL = "http://localhost:8080/stop";
@@ -45,15 +48,19 @@ public class Client {
             HttpEntity httpEntity = response.getEntity();
             if(httpEntity != null){
                 try(InputStream inputStream = httpEntity.getContent()){
-                    int i;
-                    StringBuilder builder = new StringBuilder();
-                    while((i = inputStream.read()) != -1){
-                        builder.append((char)i);
-                    }
-                    System.out.println(builder.toString());
+                    ObjectInputStream ois = new ObjectInputStream(inputStream);
+                    DownloadInfo info = (DownloadInfo) ois.readObject();
+                    System.out.println(info);
+
+//                    int i;
+//                    StringBuilder builder = new StringBuilder();
+//                    while((i = inputStream.read()) != -1){
+//                        builder.append((char)i);
+//                    }
+//                    System.out.println(builder.toString());
                 }
             }
-        } catch (IOException e) {
+        } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
         finally {
@@ -74,6 +81,25 @@ public class Client {
         }
     }
 
+    void download(){
+
+    }
+
+    void pause(int id){
+
+    }
+
+    void resume(int id){
+
+    }
+
+    void update(){
+
+    }
+
+    void run(){
+        
+    }
 
     public static void main(String[] args) {
         String url = "http://mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";

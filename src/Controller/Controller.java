@@ -32,30 +32,31 @@ public class Controller {
         return entries;
     }
 
-    public int handler(int id, URL url, String filename, String downloadDir, String action) throws IOException {
+    public Object handler(int id, URL url, String filename, String downloadDir, String action) throws IOException {
         //your code here
+//        Object object;
         switch (action){
             case "download":
                 id = this.download(url, filename, downloadDir);
                 break;
             case "pause":
 //                int id = this.getID(url);
-                if(this.check(id, url, filename, downloadDir)) {
-                    System.out.println("pause id:"+id);
-                    this.pause(id);
-                }
+//                if(this.check(id, url, filename, downloadDir)) {
+                System.out.println("pause id:"+id);
+                this.pause(id);
+//                }
                 break;
             case "resume":
 //                int iD = this.getID(url);
-                if(this.check(id, url, filename, downloadDir)) {
-                    System.out.println("pause id:" + id);
-                    this.resume(id);
-                }
+//                if(this.check(id, url, filename, downloadDir)) {
+                System.out.println("pause id:" + id);
+                this.resume(id);
+//                }
                 break;
             default:
                 break;
         }
-        return id;
+        return DownloadInfo.createDownloadInfo(id, this.entries.get(id));
     }
 
     private boolean check(int id, URL url, String filename, String downloadDir){
@@ -146,15 +147,15 @@ public class Controller {
         DownloadEntry.writeHistory(this.historyFile, this.entries);
     }
 
-    private ArrayList<Pair<String, Integer>> getListDownloadEntry(){
+    private ArrayList<DownloadInfo> getListDownloadEntry(){
         if(this.entries.size() == 0)
             return null;
-        ArrayList<Pair<String, Integer>> listDownloadEntry = new ArrayList<>();
+        ArrayList<DownloadInfo> listDownloadEntry = new ArrayList<>();
         DownloadEntry downloadEntry;
         for(int i = 0; i < this.entries.size(); ++i){
             downloadEntry = this.entries.get(i);
             if(downloadEntry != null)
-                listDownloadEntry.add(new Pair<String, Integer>(downloadEntry.getDownloadLink().toString(), i));
+                listDownloadEntry.add(DownloadInfo.createDownloadInfo(i, downloadEntry));
         }
         return listDownloadEntry;
     }

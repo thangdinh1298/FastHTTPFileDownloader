@@ -11,8 +11,8 @@ public class DownloadEntry implements Serializable {
     protected String fileName;
     protected Long fileSize;
     protected Integer THREAD_NUM;
-    protected boolean completed;
     protected boolean resumable;
+    transient protected DownloadState state = DownloadState.STOP;
     transient protected long timeRemainning;//seconds
     transient protected float speed;//kb / s
     transient protected long totalTimeDownloading;//seconds
@@ -24,15 +24,13 @@ public class DownloadEntry implements Serializable {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.resumable = resumable;
+        this.state = DownloadState.DOWNLOADING;
         this.THREAD_NUM = null;
         this.timeRemainning = -1;
         this.speed = 0;
         this.totalTimeDownloading = 0;
     }
 
-    public boolean isCompleted(){
-        return completed;
-    }
 
     public boolean isResumable(){
         return resumable;
@@ -65,10 +63,6 @@ public class DownloadEntry implements Serializable {
 
     public long getTotalTimeDownloading() {
         return totalTimeDownloading;
-    }
-
-    protected void setCompleted(){
-        completed = true;
     }
 
     public static void writeHistory(String fileName, DownloadEntry entry) throws IOException {
@@ -118,8 +112,24 @@ public class DownloadEntry implements Serializable {
         return entries;
     }
 
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public Integer getTHREAD_NUM() {
+        return THREAD_NUM;
+    }
+
+    public DownloadState getState() {
+        return state;
+    }
+
+    public Date getDate() {
+        return date;
+    }
+
     @Override
     public String toString() {
-        return this.downloadLink+"----"+this.fileName+"----"+this.completed;
+        return this.downloadLink+"----"+this.fileName+"----"+this.state;
     }
 }

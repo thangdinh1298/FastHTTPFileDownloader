@@ -8,13 +8,13 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     transient private Thread[] threads;
     transient private int completedThread;
     transient private Pair<Long, Long>[] segment;
-    transient private boolean downloading = false;
 
     //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, long fileSize, String downloadDir, String fileName, int THREAD_NUM) throws IOException{
         super(url, downloadDir, fileName, fileSize, true);
         this.THREAD_NUM = THREAD_NUM;
         this.completedThread = 0;
+//        this.state = DownloadState.DOWNLOADING;
 //        download(de);
     }
 
@@ -24,19 +24,6 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         this.THREAD_NUM = 8;
         this.completedThread = 0;
 //        download(de);
-    }
-
-    public void pause() {
-        if (this.downloading) {
-            this.downloading = false;
-            System.out.println("Pausing");
-            for (Thread t : this.threads) {
-                if (t != null)
-                    t.interrupt();
-            }
-        }
-        else
-            System.out.println("Paused!!");
     }
 
     public void setUp(){
@@ -87,11 +74,30 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         this.mergeFile();
     }
 
+    public void pause() {
+        if (this.state == DownloadState.DOWNLOADING) {
+            this.state = DownloadState.STOP;
+            System.out.println("Pausing");
+            for (Thread t : this.threads) {
+                if (t != null)
+                    t.interrupt();
+            }
+        }
+        else if(this.state == DownloadState.COMPLETED){
+            System.out.println("completed download");
+        }
+        else
+            System.out.println("Paused!!");
+    }
+
     public void resume() throws IOException {
-        if(!this.downloading) {
-            this.downloading = true;
+        if(this.state == DownloadState.STOP) {
+            this.state = DownloadState.DOWNLOADING;
             System.out.println("resume downloading!!");
             this.loadSegment();
+        }
+        else if(this.state == DownloadState.COMPLETED){
+            System.out.println("completed download");
         }
         else
             System.out.println("downloading!!");
@@ -134,7 +140,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     @Override
     public void run() {
         try {
-            this.downloading = true;
+            this.state = DownloadState.DOWNLOADING;
             this.download();
         } catch (IOException e) {
             e.printStackTrace();
@@ -226,7 +232,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         System.out.println("file size: "+this.fileSize);
         int i = 0;
         this.completedThread = 0;
-        this.downloading = false;
+        this.state = DownloadState.STOP;
         this.segment = new Pair[this.THREAD_NUM];
         this.threads = new Thread[this.THREAD_NUM];
         long segmentSize = this.fileSize/this.THREAD_NUM;
@@ -248,6 +254,9 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             this.segment[i] = new Pair<>(startByte+bytesDownloaded, endByte);
 
             ++i;
+        }
+        if(this.completedThread == this.THREAD_NUM){
+            this.state = DownloadState.COMPLETED;
         }
     }
 }
