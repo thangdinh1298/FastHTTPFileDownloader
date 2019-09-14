@@ -126,14 +126,14 @@ public class Client {
         System.out.println("enter id paused!");
         int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
-        this.post(0, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "pause");
+        this.post(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "pause");
     }
 
     private void resume(){
         System.out.println("enter id resumed!");
         int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
-        this.post(0, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "resume");
+        this.post(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "resume");
     }
 
     private void update(){
