@@ -9,12 +9,22 @@ public abstract class DownloadEntry {
     protected String fileName;
     protected boolean completed;
     protected boolean resumable;
+    protected State state;
 
     public DownloadEntry(URL downloadLink, String downloadDir, String fileName, boolean resumable) {
         this.downloadLink = downloadLink;
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
+        this.state = State.PAUSED;
+    }
+
+    public enum State {
+        PAUSED,
+
+        DOWNLOADING,
+
+        COMPLETED;
     }
 
     public void initDownload() {};
@@ -41,8 +51,12 @@ public abstract class DownloadEntry {
 
     public void resume() throws OperationNotSupportedException {}
 
-    public void pause() throws OperationNotSupportedException { }
+    public void pause() throws OperationNotSupportedException {}
 
+    @Override
+    public String toString() {
+        return String.format("%s\t", this.getAbsolutePath());
+    }
 
     public String getAbsolutePath() {
         return downloadDir + "/" + fileName;

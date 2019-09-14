@@ -121,11 +121,6 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         }
     }
 
-    @Override
-    public String toString() {
-        return "Multithreaded downloader";
-    }
-
     private class DownloadThread implements Runnable {
         private long startByte;
         private long chunkSize; //num bytes to download including the start byte

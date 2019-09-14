@@ -7,6 +7,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
+import javax.naming.OperationNotSupportedException;
 import javax.rmi.CORBA.Util;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +29,7 @@ public class Daemon {
         InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
         HttpServer server = HttpServer.create(sockAddr, 0);
         server.createContext("/download", new downloadHandler());
+        server.createContext("/pause", new pauseHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
     }
@@ -69,8 +71,8 @@ public class Daemon {
 
                 StringBuilder response = new StringBuilder();
 
-                for(DownloadEntry entry: entries){
-                    response.append(entry.toString() + '\n');
+                for(int i = 0; i < entries.size(); i++){
+                    response.append(i + "\t" + entries.get(i).toString() + '\n');
                 }
 
                 Utils.writeResponse(httpExchange, response.toString(), 200);
@@ -82,7 +84,24 @@ public class Daemon {
 
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
+            String index = httpExchange.getRequestHeaders().getFirst("index");
 
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                DownloadEntry de = Controller.getEntryAt(idx);
+                de.pause();
+                Utils.writeResponse(httpExchange, "paused successfully", 200);
+            }catch (NumberFormatException e){
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
+            } catch (OperationNotSupportedException e) {
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+            }
         }
     }
 

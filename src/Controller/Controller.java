@@ -8,8 +8,6 @@ import java.net.HttpURLConnection;
 
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 public class Controller {
     private static ArrayList<DownloadEntry> entries = new ArrayList<>();
@@ -86,6 +84,10 @@ public class Controller {
             }
         }
         return -1l;
+    }
+
+    public static DownloadEntry getEntryAt(int idx){
+        return entries.get(idx);
     }
 
     public static ArrayList<DownloadEntry> getEntries(){
