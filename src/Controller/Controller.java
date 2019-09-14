@@ -8,11 +8,14 @@ import java.net.MalformedURLException;
 import java.net.NoRouteToHostException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Stack;
 //import java.util.Queue;
 
 public class Controller {
     private ArrayList<DownloadEntry> entries = new ArrayList<>();
+    private Set<String> filenameSet;
     private String historyFile = "downloadDir/history.dat";
     private static Controller controller = null;
 
@@ -26,6 +29,7 @@ public class Controller {
             e.printStackTrace();
         }
         this.avaiableID = new Stack<>();
+        this.filenameSet = new HashSet<>();
     }
 
     public ArrayList<DownloadEntry> getEntries() {
@@ -37,6 +41,19 @@ public class Controller {
 //        Object object;
         switch (action){
             case "download":
+                int i = 0;
+                int size = this.filenameSet.size();
+                this.filenameSet.add(filename);
+                if(this.filenameSet.size() == size) {
+                    while (this.filenameSet.size() == size) {
+                        size = this.filenameSet.size();
+                        this.filenameSet.add(filename + i);
+                        ++i;
+                    }
+                    i--;
+                    filename = filename + i;
+                }
+
                 id = this.download(url, filename, downloadDir);
                 break;
             case "pause":
@@ -58,6 +75,20 @@ public class Controller {
         }
         return DownloadInfo.createDownloadInfo(id, this.entries.get(id));
     }
+
+//    private boolean checkExist(URL url, String filename, String downloadDir){
+//        for(int id = 0; )
+//        DownloadEntry entry = this.entries.get(id);
+//        if(entry == null)
+//            return false;
+//        if(!url.equals(entry.getDownloadLink()))
+//            return false;
+//        if(!filename.equals(entry.getFileName()))
+//            return false;
+//        if(!downloadDir.equals(entry.getDownloadDir()))
+//            return false;
+//        return true;
+//    }
 
     private boolean check(int id, URL url, String filename, String downloadDir){
         if(id >= this.entries.size() || id < 0)

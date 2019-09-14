@@ -96,7 +96,7 @@ public class Daemon {
 //                else if(action.equals("pause")){
 //                    msg = info + " pause!";
 //                }
-//                else if(action.equals("resume")){
+//                else if(action.equals("resume")){(downloadDir + "/" + fileName + this.threadID, true));
 //                    msg = id + " resume!";
 //                }
 

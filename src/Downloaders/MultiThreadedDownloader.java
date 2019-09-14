@@ -185,7 +185,8 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
                 is = conn.getInputStream();
 
-                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID, true));
+                os = new BufferedOutputStream(new FileOutputStream(
+                        String.format("%s/~%sS%d", downloadDir, fileName, this.threadID), true));
                 int c;
 
                 while(count < this.segmentSize && (c = is.read()) != -1 && !Thread.interrupted()){
@@ -240,7 +241,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         long endByte = 0;
         long bytesDownloaded = 0;
         while(i<this.THREAD_NUM){
-            bytesDownloaded = new File(String.format("%s/%s%d", this.downloadDir, this.fileName, i)).length();
+            bytesDownloaded = new File(String.format("%s/~%sS%d", this.downloadDir, this.fileName, i)).length();
 
             startByte += segmentSize;
             if(i != this.THREAD_NUM-1){

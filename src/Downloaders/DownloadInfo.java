@@ -73,7 +73,7 @@ public class DownloadInfo implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%10d %20s %20s %10dB %10s", this.id, this.downloadDir,
+        return String.format("%4d %10.50s %10.40s %10dB %10.15s", this.id, this.downloadDir,
                 this.fileName, this.fileSize, this.state);
     }
 }
