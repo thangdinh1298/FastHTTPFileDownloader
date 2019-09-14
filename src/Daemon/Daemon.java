@@ -57,7 +57,7 @@ public class Daemon {
                 try{
                     URL url = new URL(body.toString());
                     Controller.getInstance().addDownload(url, fileName, downloadDir);
-                    httpExchange.getResponseHeaders().add("Content-Type", "text/html");
+                    httpExchange.getResponseHeaders().add("Content-Type", "text/plain");
                     Utils.writeResponse(httpExchange, "Download added successfully", 200);
                 } catch (MalformedURLException e){
                     Utils.writeResponse(httpExchange, "Invalid URL", 400);
