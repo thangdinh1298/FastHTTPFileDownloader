@@ -115,7 +115,7 @@ public class Client {
     }
 
     private void download(){
-        String url = "http:pause//mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";
+        String url = "http://mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";
         String filename = "filename";
         String downloadDir = "downloadDir";
         String action = "download";
@@ -186,18 +186,19 @@ public class Client {
 
 
     public static void main(String[] args) {
-        String url = "http://mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";
-        String filename = "filename";
-        String downloadDir = "downloadDir";
-        String action = "download";
-
-        Client client = new Client();
-        client.post(0, url, filename, downloadDir, action);
-//        client.stopServer();
-        client.close();
+//        String url = "http://mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";
+//        String filename = "filename";
+//        String downloadDir = "downloadDir";
+//        String action = "download";
 
 //        Client client = new Client();
-//        client.run();
+//        client.download();
+////        client.post(0, url, filename, downloadDir, action);
+////        client.stopServer();
 //        client.close();
+
+        Client client = new Client();
+        client.run();
+        client.close();
     }
 }
