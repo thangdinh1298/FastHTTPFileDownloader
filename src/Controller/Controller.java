@@ -41,6 +41,22 @@ public class Controller {
         return entries;
     }
 
+    public ArrayList<DownloadInfo> getDownloadInfo(){
+        if(this.entries.size() == 0)
+            return null;
+        ArrayList<DownloadInfo> infos = new ArrayList<>();
+        DownloadEntry entry;
+        for(int i = 0; i < this.entries.size(); ++i){
+            entry = this.entries.get(i);
+            if(entry != null) {
+                infos.add(DownloadInfo.createDownloadInfo(i, entry));
+            }
+        }
+        if(infos.size() == 0)
+            return null;
+        return infos;
+    }
+
     public Object handler(int id, URL url, String filename, String downloadDir, String action) throws IOException {
         //your code here
 //        Object object;
@@ -171,8 +187,13 @@ public class Controller {
 
     private void pause(int id){
         DownloadEntry entry = this.getDownloadEntry(id);
-        if(entry.isResumable())
+        if(entry != null && entry.isResumable())
             ((MultiThreadedDownloader) entry).pause();
+    }
+    synchronized public void pause(){
+        for(int i = 0; i < this.entries.size(); ++i){
+            this.pause(i);
+        }
     }
 
     public void remove(int id){

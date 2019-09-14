@@ -23,58 +23,42 @@ public class Client {
     private Scanner input;
 
     private String severURL = "http://localhost:8080/download";
+    private String severInfoURL = "http://localhost:8080/downloadInfo";
     private String stopServerURL = "http://localhost:8080/stop";
 
     public Client(){
         this.httpClient = HttpClients.createDefault();
         this.downloadInfoMap = new HashMap<>();
         this.input = new Scanner(System.in);
+        this.getDownloadInfo();
     }
 
-    public void stopServer() {
-        this.post(this.stopServerURL, 0, "null", "null", "null", "null");
-    }
-
-    public void post(int id, String url, String filename, String downloadDir, String action){
-        this.post(this.severURL, id, url, filename, downloadDir, action);
-    }
-
-    public void post(String severURL, int id, String url, String filename, String downloadDir, String action){
-        HttpPost httpPost = new HttpPost(severURL);
-        httpPost.setHeader("file-name", filename);
-        httpPost.setHeader("download-dir", downloadDir);
-        httpPost.setHeader("action", action);
-        httpPost.setHeader("id", id);
-
-        CloseableHttpResponse response = null;
-        try{
-            StringEntity entity = new StringEntity(url);
-            httpPost.setEntity(entity);
-            response = this.httpClient.execute(httpPost);
-
-            HttpEntity httpEntity = response.getEntity();
-            if(httpEntity != null){
-                try(InputStream inputStream = httpEntity.getContent()){
-                    ObjectInputStream ois = new ObjectInputStream(inputStream);
-                    DownloadInfo info;
-                    try {
-                        while ((info = (DownloadInfo) ois.readObject()) != null) {
-                            this.downloadInfoMap.put(info.getId(), info);
-                            this.displayDownload(info.getId());
-                        }
+    private void addToMap(CloseableHttpResponse response) throws IOException, ClassNotFoundException {
+        if(response == null){
+            System.out.println("respond = null");
+            return;
+        }
+        HttpEntity httpEntity = response.getEntity();
+        if(httpEntity != null){
+            try(InputStream inputStream = httpEntity.getContent()){
+                ObjectInputStream ois = new ObjectInputStream(inputStream);
+                DownloadInfo info;
+                try {
+                    while ((info = (DownloadInfo) ois.readObject()) != null) {
+                        this.downloadInfoMap.put(info.getId(), info);
                     }
-                    catch (EOFException e){
-                        System.out.println("end of file!");
-                    }
-
-//                    int i;
-//                    StringBuilder builder = new StringBuilder();
-//                    while((i = inputStream.read()) != -1){
-//                        builder.append((char)i);
-//                    }
-//                    System.out.println(builder.toString());
+                }
+                catch (EOFException e){
+                    System.out.println("end of stream!");
                 }
             }
+        }
+    }
+
+    private void getDownloadInfo(){
+        CloseableHttpResponse response = this.doPost(this.severInfoURL, 0, "none", "none", "none","downloadInfo");
+        try{
+            this.addToMap(response);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
         }
@@ -86,6 +70,33 @@ public class Client {
                 e.printStackTrace();
             }
         }
+    }
+
+    public void stopServer() {
+        this.doPost(this.stopServerURL, 0, "null", "null", "null", "null");
+    }
+
+    public CloseableHttpResponse doPost(int id, String url, String filename, String downloadDir, String action){
+        return this.doPost(this.severURL, id, url, filename, downloadDir, action);
+    }
+
+    public CloseableHttpResponse doPost(String severURL, int id, String url, String filename, String downloadDir, String action){
+        HttpPost httpPost = new HttpPost(severURL);
+        httpPost.setHeader("file-name", filename);
+        httpPost.setHeader("download-dir", downloadDir);
+        httpPost.setHeader("action", action);
+        httpPost.setHeader("id", id);
+
+        CloseableHttpResponse response = null;
+
+        StringEntity entity = new StringEntity(url);
+        httpPost.setEntity(entity);
+        try {
+            return this.httpClient.execute(httpPost);
+        } catch (IOException e) {
+            System.out.println("error execute doPost!1");
+        }
+        return null;
     }
 
     public void close(){
@@ -119,26 +130,54 @@ public class Client {
         String filename = "filename";
         String downloadDir = "downloadDir";
         String action = "download";
-        this.post(0, url, filename, downloadDir, action);
+        CloseableHttpResponse response = this.doPost(0, url, filename, downloadDir, action);
+        try{
+            this.addToMap(response);
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if(response != null)
+                    response.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     private void pause(){
         System.out.println("enter id paused!");
         int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
-        this.post(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "pause");
+        CloseableHttpResponse response = this.doPost(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "pause");
+        try {
+            response.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void resume(){
         System.out.println("enter id resumed!");
         int id = input.nextInt();
         DownloadInfo info = this.downloadInfoMap.get(id);
-        this.post(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "resume");
+        CloseableHttpResponse response = this.doPost(id, info.getDownloadLink(), info.getFileName(), info.getDownloadDir(), "resume");
+        try {
+            response.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void update(){
         System.out.println("updating ...");
-        this.post(-1, "none", "none", "none", "update");
+        CloseableHttpResponse response = this.doPost(-1, "none", "none", "none", "update");
+        try {
+            response.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.displayDownloads();
         System.out.println("updated!!");
     }

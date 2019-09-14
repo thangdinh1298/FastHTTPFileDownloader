@@ -12,7 +12,7 @@ public class DownloadEntry implements Serializable {
     protected Long fileSize;
     protected Integer THREAD_NUM;
     protected boolean resumable;
-    transient protected DownloadState state = DownloadState.STOP;
+    protected DownloadState state = DownloadState.STOP;
     transient protected long timeRemainning;//seconds
     transient protected float speed;//kb / s
     transient protected long totalTimeDownloading;//seconds
@@ -98,6 +98,9 @@ public class DownloadEntry implements Serializable {
         try {
             while(true) {
                 de = (DownloadEntry) ois.readObject();
+                if(de.isResumable() && de.state != DownloadState.COMPLETED){
+                    ((MultiThreadedDownloader) de).loadSegment();
+                }
                 entries.add(de);
             }
         }catch (EOFException e){

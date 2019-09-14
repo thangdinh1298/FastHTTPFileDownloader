@@ -1,7 +1,7 @@
 
 package Util;
 
-import Downloaders.DownloadEntry;
+//import Downloaders.DownloadEntry;
 import Downloaders.DownloadInfo;
 import com.sun.net.httpserver.HttpExchange;
 
@@ -30,35 +30,21 @@ public class Utils {
         }
     }
     public static void writeResponse(HttpExchange httpExchange, ArrayList<DownloadInfo> infos, int code) throws IOException {
-        ObjectOutputStream os = new ObjectOutputStream(httpExchange.getResponseBody());
-
-        try {
-            httpExchange.sendResponseHeaders(code, infos.size());
-            for(DownloadInfo info: infos){
-                os.writeObject(info);
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                os.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    public static void writeResponse(HttpExchange httpExchange, DownloadInfo info, int code) throws IOException {
         OutputStream os = new BufferedOutputStream(httpExchange.getResponseBody());
+        ByteArrayOutputStream baos = null;
+        ByteArrayInputStream bais = null;
+        ObjectOutputStream oos = null;
 
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            ObjectOutputStream oos = new ObjectOutputStream(baos);
-            oos.writeObject(info);
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            for(DownloadInfo info: infos) {
+                oos.writeObject(info);
+            }
             oos.flush();
 
             httpExchange.sendResponseHeaders(code, baos.size());
-            ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+            bais = new ByteArrayInputStream(baos.toByteArray());
 
             int c;
             while( (c = bais.read()) != -1){
@@ -70,6 +56,50 @@ public class Utils {
             e.printStackTrace();
         } finally {
             try {
+                if(baos != null)
+                    baos.close();
+                if(bais != null)
+                    bais.close();
+                if(oos != null)
+                    oos.close();
+                os.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public static void writeResponse(HttpExchange httpExchange, DownloadInfo info, int code) throws IOException {
+        OutputStream os = new BufferedOutputStream(httpExchange.getResponseBody());
+        ByteArrayOutputStream baos = null;
+        ByteArrayInputStream bais = null;
+        ObjectOutputStream oos = null;
+
+        try {
+            baos = new ByteArrayOutputStream();
+            oos = new ObjectOutputStream(baos);
+            oos.writeObject(info);
+            oos.flush();
+
+            httpExchange.sendResponseHeaders(code, baos.size());
+            bais = new ByteArrayInputStream(baos.toByteArray());
+
+            int c;
+            while( (c = bais.read()) != -1){
+                os.write(c);
+            }
+            os.flush();
+//            os.toString().length();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            try {
+                if(baos != null)
+                    baos.close();
+                if(bais != null)
+                    bais.close();
+                if(oos != null)
+                    oos.close();
                 os.close();
             } catch (IOException e) {
                 e.printStackTrace();

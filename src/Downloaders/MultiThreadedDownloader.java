@@ -94,7 +94,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
         if(this.state == DownloadState.STOP) {
             this.state = DownloadState.DOWNLOADING;
             System.out.println("resume downloading!!");
-            this.loadSegment();
+//            this.loadSegment();
         }
         else if(this.state == DownloadState.COMPLETED){
             System.out.println("completed download");
