@@ -3,16 +3,15 @@ package Daemon;
 import Controller.Controller;
 import Downloaders.DownloadEntry;
 import Util.Utils;
+import Util.ThreadPool;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
 import javax.naming.OperationNotSupportedException;
-import javax.rmi.CORBA.Util;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
@@ -22,6 +21,7 @@ import java.util.ArrayList;
 public class Daemon {
     public Daemon() throws IOException {
         Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
+//        ThreadPool.getInstance();
 
         //try different ports
         InetAddress localHost = InetAddress.getLoopbackAddress();

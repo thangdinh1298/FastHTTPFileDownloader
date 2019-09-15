@@ -1,19 +1,17 @@
 package Client;
 
 import Util.Utils;
-
-import java.nio.file.Paths;
 import java.util.HashMap;
 
 public class Client {
-    private final String DAEMON_ADDR = "localhost:8080";
+    private final String DAEMON_ADDR = "http://localhost:8080";
 
     public Client() {
 
     }
 
     public void newDownload(String fileName, String downloadDir, String url){
-        String endpoint = Paths.get(DAEMON_ADDR, "download").toString();
+        String endpoint = DAEMON_ADDR +  "/" + "download";
         HashMap<String, String> headers = new HashMap<>();
 
         headers.put("file-name", fileName);
@@ -23,12 +21,13 @@ public class Client {
     }
 
     public void getAllDownloads(){
-        String endpoint = Paths.get(DAEMON_ADDR, "download").toString();
+        String endpoint = DAEMON_ADDR +  "/" + "download";
+        System.out.println(endpoint);
         Utils.doGet(endpoint, new HashMap<>());
     }
 
     public void pauseDownload(String index){
-        String endpoint = Paths.get(DAEMON_ADDR, "pause").toString();
+        String endpoint = DAEMON_ADDR +  "/" + "pause";
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("index", index);
         Utils.doGet(endpoint, headers);
@@ -37,18 +36,21 @@ public class Client {
     public static void main(String[] args) {
         Client client = new Client();
 
-        switch (args[1]){
+        System.out.println(args.length);
+        System.out.println(args[0]);
+
+        switch (args[0]){
             case "newdownload":
-                String url = args[2];
-                String downloadDir = args[3];
-                String fileName = args[4];
+                String url = args[1];
+                String downloadDir = args[2];
+                String fileName = args[3];
                 client.newDownload(fileName, downloadDir, url);
                 break;
             case "getdownload":
                 client.getAllDownloads();
                 break;
             case "pausedownload":
-                String index = args[2];
+                String index = args[1];
                 client.pauseDownload(index);
                 break;
             default:

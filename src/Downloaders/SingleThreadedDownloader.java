@@ -58,7 +58,7 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
 
             os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
             int c;
-            int count = 0;
+            long count = 0;
             while ((c = is.read()) != -1){
                 count++;
                 os.write(c);

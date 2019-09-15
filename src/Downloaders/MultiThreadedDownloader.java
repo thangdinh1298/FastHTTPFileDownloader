@@ -95,7 +95,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
 
         //join files
-        int count = 0;
+        long count = 0;
         OutputStream os = null;
         InputStream is = null;
         try {
@@ -154,7 +154,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
                 os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID, true));
                 int c;
-                int count = 0;
+                long count = 0;
                 while((c = is.read()) != -1 && !Thread.interrupted()){
                     count++;
                     os.write(c);

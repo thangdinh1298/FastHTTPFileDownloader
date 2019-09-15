@@ -2,8 +2,8 @@ package Util;
 
 import com.sun.net.httpserver.HttpExchange;
 
-import javax.net.ssl.HttpsURLConnection;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -35,7 +35,7 @@ public class Utils {
     public static void doPost(String url, HashMap<String, String> headers, String body) {
         try{
             URL obj = new URL(url);
-            HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             //write headers
             con.setRequestMethod("POST");
             for (Map.Entry<String, String> entry: headers.entrySet()){
@@ -70,7 +70,7 @@ public class Utils {
     public static void doGet(String url, HashMap<String, String> headers) {
         try{
             URL obj = new URL(url);
-            HttpsURLConnection con = (HttpsURLConnection) obj.openConnection();
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
             //write headers
             con.setRequestMethod("GET");
             for (Map.Entry<String, String> entry: headers.entrySet()){
