@@ -1,17 +1,22 @@
 package Downloaders;
 
 import javax.naming.OperationNotSupportedException;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URL;
 
-public abstract class DownloadEntry {
+public class DownloadEntry implements Serializable {
     protected URL downloadLink;
     protected String downloadDir;
     protected String fileName;
-    protected boolean completed;
+    protected Long fileSize;
+    protected Integer threadNum;
     protected boolean resumable;
     protected State state;
 
-    public DownloadEntry(URL downloadLink, String downloadDir, String fileName, boolean resumable) {
+    public DownloadEntry(URL downloadLink, String downloadDir, String fileName,
+                         boolean resumable) {
         this.downloadLink = downloadLink;
         this.downloadDir = downloadDir;
         this.fileName = fileName;
@@ -24,13 +29,25 @@ public abstract class DownloadEntry {
 
         DOWNLOADING,
 
-        COMPLETED;
+        COMPLETED
     }
 
-    public void initDownload() {};
+    public void initDownload() {}
 
-    public boolean isCompleted(){
-        return completed;
+    public Long getFileSize() {
+        return fileSize;
+    }
+
+    public void setFileSize(Long fileSize) {
+        this.fileSize = fileSize;
+    }
+
+    public Integer getThreadNum() {
+        return threadNum;
+    }
+
+    public void setThreadNum(Integer threadNum) {
+        this.threadNum = threadNum;
     }
 
     public boolean isResumable(){
@@ -60,10 +77,6 @@ public abstract class DownloadEntry {
 
     public String getAbsolutePath() {
         return downloadDir + "/" + fileName;
-    }
-
-    protected void setCompleted(){
-        completed = true;
     }
 
 }

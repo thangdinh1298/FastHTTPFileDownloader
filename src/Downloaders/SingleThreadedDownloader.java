@@ -12,6 +12,7 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
         super(url, downloadDir, fileName, resumable);
         thisThread = new Thread(this);
+        this.threadNum = 1;
     }
 
     @Override
@@ -35,7 +36,11 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
 
     @Override
     public void resume() throws OperationNotSupportedException {
-        throw new OperationNotSupportedException();
+        if (this.resumable == false){
+            throw new OperationNotSupportedException();
+        } else {
+            System.out.println("Attempting to resume");
+        }
     }
 
     @Override

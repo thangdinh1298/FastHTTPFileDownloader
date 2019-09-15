@@ -16,9 +16,13 @@ public class DownloaderFactory {
                 System.out.println("This supports range");
                 return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
             }else {
+                if (supportRange == true){
+                    return new SingleThreadedDownloader(url, downloadDir, fileName, true);
+                }
+                else{
 //                initialize single threaded download
-                System.out.println("This does not support range");
-                return new SingleThreadedDownloader(url, downloadDir, fileName, false);
+                    return new SingleThreadedDownloader(url, downloadDir, fileName, false);
+                }
             }
 
         } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
@@ -28,4 +32,5 @@ public class DownloaderFactory {
         }
         return null;
     }
+
 }
