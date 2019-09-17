@@ -9,15 +9,23 @@ import java.util.ArrayList;
 
 public class EntryWriter {
     public static void writeToFile(String fileName, DownloadEntry entry) throws IOException {
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("history.dat"));
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
         outputStream.writeObject(entry);
         outputStream.flush();
         outputStream.close();
     }
 
+    public static void writeAllToFile(String fileName, ArrayList<DownloadEntry> entries) throws IOException{
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
+        for (DownloadEntry entry: entries){
+            outputStream.writeObject(entry);
+        }
+        outputStream.flush();
+        outputStream.close();
+    }
+
     public static ArrayList<DownloadEntry> readFromFile(String fileName) throws IOException {
-        ObjectInputStream inputStream = new ObjectInputStream(new BufferedInputStream(
-                new FileInputStream("history.dat")));
+        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName));
         DownloadEntry entry;
         ArrayList<DownloadEntry> entries = new ArrayList<>();
         try {
@@ -31,8 +39,8 @@ public class EntryWriter {
             }
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
-        } catch (EOFException e){
-            System.out.println("EOF");
+        } finally {
+            inputStream.close();
         }
         return entries;
     }
