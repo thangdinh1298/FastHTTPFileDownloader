@@ -7,13 +7,14 @@ import java.io.Serializable;
 import java.net.URL;
 
 public class DownloadEntry implements Serializable {
+    private static final long serialVersionUID = -5615651863970612799l;
     protected URL downloadLink;
     protected String downloadDir;
     protected String fileName;
-    protected Long fileSize;
-    protected Integer threadNum;
+    protected long fileSize;
+    protected int threadNum;
     protected boolean resumable;
-    protected State state;
+//    protected State state;
 
     public DownloadEntry(URL downloadLink, String downloadDir, String fileName,
                          boolean resumable) {
@@ -21,16 +22,16 @@ public class DownloadEntry implements Serializable {
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
-        this.state = State.PAUSED;
+//        this.state = State.PAUSED;
     }
 
-    public enum State {
-        PAUSED,
-
-        DOWNLOADING,
-
-        COMPLETED
-    }
+//    public enum State {
+//        PAUSED,
+//
+//        DOWNLOADING,
+//
+//        COMPLETED
+//    }
 
     public void initDownload() {}
 

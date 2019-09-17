@@ -25,10 +25,15 @@ public class EntryWriter {
     }
 
     public static ArrayList<DownloadEntry> readFromFile(String fileName) throws IOException {
-        ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(fileName));
+        ObjectInputStream inputStream = null;
         DownloadEntry entry;
         ArrayList<DownloadEntry> entries = new ArrayList<>();
+        File history = new File(Configs.history);
+        if (!history.exists()) {
+            history.createNewFile();
+        }
         try {
+            inputStream =  new ObjectInputStream(new FileInputStream(history));
             while ((entry = (DownloadEntry) inputStream.readObject()) != null) {
                 DownloadEntry de = DownloaderFactory.getDownloadEntry(entry.isResumable(),
                         entry.getFileSize(), entry.getDownloadLink(), entry.getDownloadDir(), entry.getFileName());
@@ -37,10 +42,13 @@ public class EntryWriter {
                     entries.add(de);
                 }
             }
+        } catch (FileNotFoundException e){
+            e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            inputStream.close();
+            if (inputStream != null )
+                inputStream.close();
         }
         return entries;
     }
