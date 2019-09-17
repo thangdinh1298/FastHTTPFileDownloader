@@ -31,6 +31,8 @@ public class Daemon {
         this.server.init();
         server.createContext("/download", new downloadHandler());
         server.createContext("/pause", new pauseHandler());
+        server.createContext("/resume", new resumeHandler());
+        server.createContext("/delete", new deleteHandler());
         server.setExecutor(null); // creates a default executor
     }
 
@@ -114,16 +116,62 @@ public class Daemon {
         }
     }
 
+    static class resumeHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String index = httpExchange.getRequestHeaders().getFirst("index");
+
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                DownloadEntry de = Controller.getEntryAt(idx);
+                de.resume();
+                Utils.writeResponse(httpExchange, "resumed successfully", 200);
+            }catch (NumberFormatException e){
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
+            } catch (OperationNotSupportedException e) {
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+            }
+        }
+    }
+
+    static class deleteHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String index = httpExchange.getRequestHeaders().getFirst("index");
+
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                Controller.deleteDownload(idx);
+                Utils.writeResponse(httpExchange, "deleted successfully", 200);
+            }catch (NumberFormatException e){
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
+            }
+        }
+    }
+
     public static void main(String[] args) {
         try {
             Daemon daemon = new Daemon();
             daemon.start();
             Scanner input = new Scanner(System.in);
-            System.out.println("enter something!!");
+            System.out.println("enter something to stop server!!");
             String s = input.nextLine();
             daemon.stop();
         } catch (IOException e) {
             System.out.println("cant create socket!!");
         }
     }
+
+
 }

@@ -46,6 +46,14 @@ public class DownloadEntry implements Serializable {
         return threadNum;
     }
 
+    public void setState(State state) {
+        this.state = state;
+    }
+
+    public State getState() {
+        return state;
+    }
+
     public void setThreadNum(Integer threadNum) {
         this.threadNum = threadNum;
     }

@@ -33,11 +33,27 @@ public class Client {
         Utils.doGet(endpoint, headers);
     }
 
+    public void resumeDownload(String index){
+        String endpoint = DAEMON_ADDR +  "/" + "resume";
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("index", index);
+        Utils.doGet(endpoint, headers);
+    }
+
+    public void deleteDownload(String index){
+        String endpoint = DAEMON_ADDR +  "/" + "deleteDownload";
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("index", index);
+        Utils.doGet(endpoint, headers);
+    }
+
     public static void main(String[] args) {
         Client client = new Client();
 
         System.out.println(args.length);
         System.out.println(args[0]);
+
+        String index;
 
         switch (args[0]){
             case "newdownload":
@@ -50,8 +66,16 @@ public class Client {
                 client.getAllDownloads();
                 break;
             case "pausedownload":
-                String index = args[1];
+                index = args[1];
                 client.pauseDownload(index);
+                break;
+            case "resumedownload":
+                index = args[1];
+                client.resumeDownload(index);
+                break;
+            case "deletedownload":
+                index = args[1];
+                client.deleteDownload(index);
                 break;
             default:
                 System.out.println("Operation not supported");

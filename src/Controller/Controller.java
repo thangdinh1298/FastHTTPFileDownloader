@@ -4,6 +4,7 @@ import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
 import Util.EntryWriter;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
@@ -49,6 +50,21 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void deleteDownload(int index){
+        if(index < 0 || index >= entries.size())
+            return;
+        DownloadEntry entry = entries.get(index);
+        if(entry.getState() == DownloadEntry.State.DOWNLOADING){
+            try {
+                entry.pause();
+            } catch (OperationNotSupportedException e) {
+                System.out.println("OperationNotSupportedException!");
+            }
+        }
+        entry = null;
+        entries.remove(index);
     }
 
     private static boolean pollForRangeSupport(URL url) throws IOException {

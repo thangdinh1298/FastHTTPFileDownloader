@@ -35,26 +35,32 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
     @Override
     public void resume() throws OperationNotSupportedException {
-        thisThread.start();
+        if(this.getState() == State.PAUSED) {
+            thisThread.start();
+            this.setState(State.DOWNLOADING);
+        }
     }
 
     @Override
     public void pause() throws OperationNotSupportedException{
-        synchronized (this){
-            for(Thread t: this.threads){
-                if (t != null) t.interrupt();
+        if(this.getState() == State.DOWNLOADING) {
+            synchronized (this) {
+                for (Thread t : this.threads) {
+                    if (t != null) t.interrupt();
+                }
+                thisThread.interrupt();
             }
-            thisThread.interrupt();
-        }
 
-        // wait for all threads to enter terminated state
-        try {
-            thisThread.join();
-            for (Thread t: this.threads){
-                t.join();
+            // wait for all threads to enter terminated state
+            try {
+                thisThread.join();
+                for (Thread t : this.threads) {
+                    t.join();
+                }
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            this.setState(State.PAUSED);
         }
     }
 
