@@ -15,6 +15,16 @@ public class EntryWriter {
         outputStream.close();
     }
 
+    public static void writeToFile(String fileName, ArrayList<DownloadEntry> entries) throws IOException {
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("history.dat"));
+        for(DownloadEntry entry : entries){
+            if(entry != null)
+                outputStream.writeObject(entry);
+        }
+        outputStream.flush();
+        outputStream.close();
+    }
+
     public static ArrayList<DownloadEntry> readFromFile(String fileName) throws IOException {
         ObjectInputStream inputStream = new ObjectInputStream(new BufferedInputStream(
                 new FileInputStream("history.dat")));

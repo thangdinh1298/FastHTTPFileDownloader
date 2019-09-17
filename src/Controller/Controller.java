@@ -2,6 +2,7 @@ package Controller;
 
 import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
+import Util.EntryWriter;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -19,6 +20,11 @@ public class Controller {
     public static Controller getInstance() {
         if (controller == null) {
             controller = new Controller();
+            try {
+                entries = EntryWriter.readFromFile("history.dat");
+            } catch (IOException e) {
+                System.out.println("error: can't read file history");
+            }
             //initialize entries list
         }
         return controller;
@@ -84,6 +90,14 @@ public class Controller {
             }
         }
         return -1l;
+    }
+
+    public static void writeToFile(){
+        try {
+            EntryWriter.writeToFile("history.dat", entries);
+        } catch (IOException e) {
+            System.out.println("unable to write file history!!");
+        }
     }
 
     public static DownloadEntry getEntryAt(int idx){

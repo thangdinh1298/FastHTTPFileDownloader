@@ -17,21 +17,25 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Daemon {
+    HttpServer server = null;
     public Daemon() throws IOException {
         Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
 //        ThreadPool.getInstance();
-
-        //try different ports
+//try different ports
         InetAddress localHost = InetAddress.getLoopbackAddress();
         System.out.println(localHost);
         InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
-        HttpServer server = HttpServer.create(sockAddr, 0);
+
+
+        server = HttpServer.create(sockAddr, 0);
         server.createContext("/download", new downloadHandler());
         server.createContext("/pause", new pauseHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
+
     }
 
     static class downloadHandler implements HttpHandler{
@@ -109,8 +113,7 @@ public class Daemon {
         try {
             new Daemon();
         } catch (IOException e) {
-//            System.out.println(e.getMessage());
-            e.printStackTrace();
+            System.out.println("cant create socket!!");
         }
     }
 }
