@@ -65,7 +65,7 @@ public class Daemon {
                 }
             }
             else if (httpExchange.getRequestMethod().equalsIgnoreCase("GET")){
-                ArrayList<DownloadEntry> entries = Controller.getEntries();
+                ArrayList<DownloadEntry> entries = Controller.getInstance().getEntries();
 
                 System.out.println(entries);
 
@@ -92,7 +92,7 @@ public class Daemon {
 
             try{
                 int idx = Integer.parseInt(index);
-                DownloadEntry de = Controller.getEntryAt(idx);
+                DownloadEntry de = Controller.getInstance().getEntryAt(idx);
                 de.pause();
                 Utils.writeResponse(httpExchange, "paused successfully", 200);
             }catch (NumberFormatException e){
