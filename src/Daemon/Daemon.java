@@ -18,24 +18,29 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Scanner;
+//import java.util.Scanner;
 
 public class Daemon {
-    HttpServer server = null;
+    private StoppableServer server = null;
     public Daemon() throws IOException {
         Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
 //        ThreadPool.getInstance();
 //try different ports
-        InetAddress localHost = InetAddress.getLoopbackAddress();
-        System.out.println(localHost);
-        InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
 
-
-        server = HttpServer.create(sockAddr, 0);
+        this.server = new StoppableServer();
+        this.server.init();
         server.createContext("/download", new downloadHandler());
         server.createContext("/pause", new pauseHandler());
         server.setExecutor(null); // creates a default executor
-        server.start();
+    }
 
+    public void start(){
+        Thread t = new Thread(this.server);
+        t.start();
+    }
+
+    public void stop(){
+        this.server.stop();
     }
 
     static class downloadHandler implements HttpHandler{
@@ -111,7 +116,12 @@ public class Daemon {
 
     public static void main(String[] args) {
         try {
-            new Daemon();
+            Daemon daemon = new Daemon();
+            daemon.start();
+            Scanner input = new Scanner(System.in);
+            System.out.println("enter something!!");
+            String s = input.nextLine();
+            daemon.stop();
         } catch (IOException e) {
             System.out.println("cant create socket!!");
         }
