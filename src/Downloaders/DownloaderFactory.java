@@ -9,14 +9,14 @@ public class DownloaderFactory {
 
     }
 
-    public static DownloadEntry getDownloadEntry(boolean supportRange, Long fileSize, URL url, String downloadDir, String fileName){
+    public static DownloadEntry getDownloadEntry(boolean resumable, Long fileSize, URL url, String downloadDir, String fileName){
         try{
-            if (supportRange == true && fileSize != -1){
+            if (resumable == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
                 return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
             }else {
-                if (supportRange == true){
+                if (resumable == true){
                     return new SingleThreadedDownloader(url, downloadDir, fileName, true);
                 }
                 else{

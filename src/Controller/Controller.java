@@ -10,7 +10,7 @@ import java.net.URL;
 import java.util.ArrayList;
 
 public class Controller {
-    private static ArrayList<DownloadEntry> entries = new ArrayList<>();
+    private static ArrayList<DownloadEntry> entries;
     private static Controller controller = null;
 
     private Controller() {
@@ -20,6 +20,11 @@ public class Controller {
         if (controller == null) {
             controller = new Controller();
             //initialize entries list
+            try {
+                entries = Util.EntryWriter.readFromFile("history.dat");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return controller;
     }
@@ -28,16 +33,17 @@ public class Controller {
     public static void addDownload(URL url, String fileName, String downloadDir) {
         System.out.println(Controller.entries);
         try{
-            boolean supportRange = pollForRangeSupport(url);
+            boolean resumable = pollForRangeSupport(url);
             Long fileSize = pollForFileSize(url);
 
-            System.out.println(supportRange + " "  + fileSize);
+            System.out.println(resumable + " "  + fileSize);
 
-            DownloadEntry de = DownloaderFactory.getDownloadEntry(supportRange,
+            DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                     fileSize, url, downloadDir, fileName);
-            de.initDownload();
+            de.initDownload(); //todo: should throw error if de is null
             System.out.println("adding entries");
             entries.add(de);
+
             System.out.println("returning from add download");
 
         } catch (IOException e) {
