@@ -23,7 +23,6 @@ public class Controller {
         if (controller == null) {
             controller = new Controller();
             backupManager = new BackupManager();
-            entries = new ArrayList<>();
             //initialize entries list
             try {
                 entries = Util.EntryWriter.readFromFile(Configs.history);

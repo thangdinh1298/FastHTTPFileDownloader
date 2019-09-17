@@ -34,7 +34,8 @@ public class EntryWriter {
         }
         try {
             inputStream =  new ObjectInputStream(new FileInputStream(history));
-            while ((entry = (DownloadEntry) inputStream.readObject()) != null) {
+            while (true) {
+                entry = (DownloadEntry) inputStream.readObject();
                 DownloadEntry de = DownloaderFactory.getDownloadEntry(entry.isResumable(),
                         entry.getFileSize(), entry.getDownloadLink(), entry.getDownloadDir(), entry.getFileName());
 
@@ -42,6 +43,8 @@ public class EntryWriter {
                     entries.add(de);
                 }
             }
+        } catch (EOFException e){
+            System.out.println("EOF reached");
         } catch (FileNotFoundException e){
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -50,6 +53,7 @@ public class EntryWriter {
             if (inputStream != null )
                 inputStream.close();
         }
+        System.out.println(entries.size());
         return entries;
     }
 }
