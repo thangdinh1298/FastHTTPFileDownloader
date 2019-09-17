@@ -87,7 +87,7 @@ public class RequestProcessor implements Runnable {
                             raw.write(theData);
                         } else {
                             int contentLength = rangeEnd - rangeStart + 1;
-                            sendHeader(out, "HTTP/1.0 206 Partial Content", contentType, contentLength, contentRange);
+                            sendHeader(out, "HTTP/1.0 206 Partial Content", contentType, theData.length, contentLength, contentRange);
                             for (int i = rangeStart; i <= rangeEnd; i++) {
                                 raw.write(theData[i]);
                             }
@@ -138,29 +138,29 @@ public class RequestProcessor implements Runnable {
     }
 
     private void sendHeader(Writer out, String responseCode,
-                            String contentType, int length) throws IOException {
+                            String contentType, int totalLength) throws IOException {
         out.write(responseCode + "\r\n");
         Date now = new Date();
         out.write("Date: " + now + "\r\n");
         out.write("Server: JHTTP 2.0\r\n");
-        out.write("Content-Length: " + length + "\r\n");
+        out.write("Content-Length: " + totalLength + "\r\n");
         out.write("Content-Type: " + contentType + "\r\n");
         out.write("Content-Disposition: attachment; filename=\"" + indexFileName + "\"" + "\r\n\r\n");
         out.flush();
     }
 
     private void sendHeader(Writer out, String responseCode,
-                            String contentType, int length, String contentRange)
+                            String contentType, int totalLength, int length, String contentRange)
             throws IOException {
         out.write(responseCode + "\r\n");
 
         Date now = new Date();
         out.write("Date: " + now + "\r\n");
         out.write("Server: JHTTP 2.0\r\n");
-        out.write("Content-Range: bytes " + contentRange + "/" + length + "\r\n");
+        out.write("Content-Range: bytes " + contentRange + "/" + totalLength + "\r\n");
         out.write("Content-Type: " + contentType + "\r\n");
         out.write("Accept-Ranges: bytes" + "\r\n");
-        out.write("Content-Length: "     + length + "\r\n");
+        out.write("Content-Length: " + length + "\r\n");
         out.write("Content-Disposition: attachment; filename=\"" + indexFileName + "\"" + "\r\n\r\n");
         out.flush();
     }
