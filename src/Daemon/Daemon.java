@@ -6,14 +6,14 @@ import Util.Utils;
 //import Util.ThreadPool;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+//import com.sun.net.httpserver.HttpServer;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.io.InputStream;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
+//import java.net.InetAddress;
+//import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -42,6 +42,7 @@ public class Daemon {
     }
 
     public void stop(){
+        Controller.writeToFile();
         this.server.stop();
     }
 

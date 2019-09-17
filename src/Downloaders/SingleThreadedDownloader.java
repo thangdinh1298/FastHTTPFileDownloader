@@ -6,7 +6,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
-    private Thread thisThread;
+    transient private Thread thisThread;
 
     //todo: close streams!!!! by handling error inside download function
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
