@@ -37,22 +37,24 @@ public class RequestProcessor implements Runnable {
                     connection.getOutputStream()
             );
             Writer out = new OutputStreamWriter(raw);
-            Reader in = new InputStreamReader(
-                    new BufferedInputStream(
-                            connection.getInputStream()
-                    ), "US-ASCII"
-            );
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             StringBuilder requestLine = new StringBuilder();
-            while (true) {
-                int c = in.read();
-                if (c == '\r' || c == '\n') break;
-                requestLine.append((char) c);
+            String c;
+            while ((c = in.readLine()) != null) {
+                if (c.length() == 0)
+                    break;
+                requestLine.append(c + "\r\n");
             }
+
             String get = requestLine.toString();
             logger.info(connection.getRemoteSocketAddress() + " " + get);
             String[] tokens = get.split("\\s+");
             String method = tokens[0];
             String version = "";
+            String contentRange = "";
+            int rangeStart = 0;
+            int rangeEnd = 0;
             if (method.equals("GET")) {
                 String fileName = tokens[1];
                 if (fileName.endsWith("/")) fileName += indexFileName;
@@ -61,19 +63,39 @@ public class RequestProcessor implements Runnable {
                 if (tokens.length > 2) {
                     version = tokens[2];
                 }
+
+                for (int i = 0; i < tokens.length; i++) {
+                    String tok = tokens[i];
+                    if (tok.equals("Range:")) {
+                        contentRange = tokens[i + 1].split("=")[1];
+                        rangeStart = Integer.parseInt(contentRange.split("-")[0]);
+                        rangeEnd = Integer.parseInt(contentRange.split("-")[1]);
+                        break;
+                    }
+                }
+
                 File theFile = new File(rootDirectory,
                         fileName.substring(1, fileName.length()));
                 if (theFile.canRead()
+
                         // Don't let clients outside the document root
                         && theFile.getCanonicalPath().startsWith(root)) {
                     byte[] theData = Files.readAllBytes(theFile.toPath());
                     if (version.startsWith("HTTP/")) { // send a MIME header
-                        sendHeader(out, "HTTP/1.0 200 OK", contentType, theData.length);
+                        if (contentRange.isEmpty()) {
+                            sendHeader(out, "HTTP/1.0 200 OK", contentType, theData.length);
+                            raw.write(theData);
+                        } else {
+                            int contentLength = rangeEnd - rangeStart + 1;
+                            sendHeader(out, "HTTP/1.0 206 Partial Content", contentType, contentLength, contentRange);
+                            for (int i = rangeStart; i <= rangeEnd; i++) {
+                                raw.write(theData[i]);
+                            }
+                        }
                     }
                     // send the file; it may be an image or other binary data
                     // so use the underlying output stream
                     // instead of the writer
-                    raw.write(theData);
                     raw.flush();
                 } else { // can't find the file
                     String body = new StringBuilder("<HTML>\r\n")
@@ -101,7 +123,7 @@ public class RequestProcessor implements Runnable {
                             "text/html; charset=utf-8", body.length());
                 }
                 out.write(body);
-                out.flush();
+//                out.flush();
             }
         } catch (IOException ex) {
             logger.log(Level.WARNING,
@@ -110,19 +132,35 @@ public class RequestProcessor implements Runnable {
             try {
                 connection.close();
             } catch (IOException ex) {
+                logger.info(ex.toString());
             }
         }
     }
 
     private void sendHeader(Writer out, String responseCode,
-                            String contentType, int length)
-            throws IOException {
+                            String contentType, int length) throws IOException {
         out.write(responseCode + "\r\n");
         Date now = new Date();
         out.write("Date: " + now + "\r\n");
         out.write("Server: JHTTP 2.0\r\n");
-        out.write("Content-length: " + length + "\r\n");
-        out.write("Content-type: " + contentType + "\r\n");
+        out.write("Content-Length: " + length + "\r\n");
+        out.write("Content-Type: " + contentType + "\r\n");
+        out.write("Content-Disposition: attachment; filename=\"" + indexFileName + "\"" + "\r\n\r\n");
+        out.flush();
+    }
+
+    private void sendHeader(Writer out, String responseCode,
+                            String contentType, int length, String contentRange)
+            throws IOException {
+        out.write(responseCode + "\r\n");
+
+        Date now = new Date();
+        out.write("Date: " + now + "\r\n");
+        out.write("Server: JHTTP 2.0\r\n");
+        out.write("Content-Range: bytes " + contentRange + "/" + length + "\r\n");
+        out.write("Content-Type: " + contentType + "\r\n");
+        out.write("Accept-Ranges: bytes" + "\r\n");
+        out.write("Content-Length: "     + length + "\r\n");
         out.write("Content-Disposition: attachment; filename=\"" + indexFileName + "\"" + "\r\n\r\n");
         out.flush();
     }
