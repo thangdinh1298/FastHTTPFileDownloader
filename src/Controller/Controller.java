@@ -5,6 +5,7 @@ import Downloaders.DownloadEntry;
 import Util.BackupManager;
 import Util.Configs;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
@@ -53,6 +54,23 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public void deleteDownload(int index){
+        if(index < 0 || index >= entries.size())
+            return;
+
+        entries.remove(index);
+    }
+
+    public void pauseDownload(int index) throws OperationNotSupportedException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        de.pause();
+    }
+
+    public void resumeDownload(int index) throws OperationNotSupportedException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        de.resume();
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {

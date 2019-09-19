@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.URL;
+import java.nio.file.Paths;
 
 public class DownloadEntry implements Serializable {
     private static final long serialVersionUID = -5615651863970612799l;
@@ -77,7 +78,7 @@ public class DownloadEntry implements Serializable {
     }
 
     public String getAbsolutePath() {
-        return downloadDir + "/" + fileName;
+        return String.valueOf(Paths.get(downloadDir, fileName));
     }
 
 }

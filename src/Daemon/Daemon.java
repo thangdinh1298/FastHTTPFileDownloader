@@ -30,6 +30,8 @@ public class Daemon {
         HttpServer server = HttpServer.create(sockAddr, 0);
         server.createContext("/download", new downloadHandler());
         server.createContext("/pause", new pauseHandler());
+        server.createContext("/resume", new resumeHandler());
+        server.createContext("/delete", new deleteHandler());
         server.setExecutor(null); // creates a default executor
         server.start();
     }
@@ -92,8 +94,8 @@ public class Daemon {
 
             try{
                 int idx = Integer.parseInt(index);
-                DownloadEntry de = Controller.getInstance().getEntryAt(idx);
-                de.pause();
+
+                Controller.getInstance().pauseDownload(idx);
                 Utils.writeResponse(httpExchange, "paused successfully", 200);
             }catch (NumberFormatException e){
                 e.printStackTrace();
@@ -101,6 +103,50 @@ public class Daemon {
             } catch (OperationNotSupportedException e) {
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+            }
+        }
+    }
+
+    static class resumeHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            System.out.println("Request received");
+            String index = httpExchange.getRequestHeaders().getFirst("index");
+
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                Controller.getInstance().resumeDownload(idx);
+                Utils.writeResponse(httpExchange, "resumed successfully", 200);
+            }catch (NumberFormatException e){
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
+            } catch (OperationNotSupportedException e) {
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+            }
+        }
+    }
+
+    static class deleteHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            String index = httpExchange.getRequestHeaders().getFirst("index");
+
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                Controller.getInstance().deleteDownload(idx);
+                Utils.writeResponse(httpExchange, "deleted successfully", 200);
+            }catch (NumberFormatException e){
+                e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
             }
         }
     }

@@ -4,6 +4,7 @@ import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Paths;
 
 public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     private transient Thread[] threads;
@@ -13,8 +14,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
-        this.thisThread = new Thread(this);
-        this.threadNum = 8;
+        this.threadNum = 4;
     }
 
     @Override
@@ -28,11 +28,13 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
     @Override
     public void initDownload() {
+        this.thisThread = new Thread(this);
         thisThread.start();
     }
 
     @Override
     public void resume() throws OperationNotSupportedException {
+        this.thisThread = new Thread(this);
         thisThread.start();
     }
 
@@ -151,7 +153,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
 
                 is = conn.getInputStream();
 
-                os = new BufferedOutputStream(new FileOutputStream(downloadDir + "/" + fileName + this.threadID, true));
+                os = new BufferedOutputStream(new FileOutputStream(String.valueOf(Paths.get(downloadDir, fileName + this.threadID)), true));
                 int c;
                 long count = 0;
                 while((c = is.read()) != -1 && !Thread.interrupted()){
