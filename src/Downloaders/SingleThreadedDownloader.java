@@ -1,39 +1,81 @@
 package Downloaders;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class SingleThreadedDownloader {
-    URL url;
-    String path = "downloadDir/test.pdf";
+public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
+    private transient Thread thisThread;
 
-    public SingleThreadedDownloader(URL url) {
-        this.url = url;
+    //todo: close streams!!!! by handling error inside download function
+    public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
+        super(url, downloadDir, fileName, resumable);
+        thisThread = new Thread(this);
+        this.threadNum = 1;
+    }
+
+    @Override
+    public void run() {
         try {
-            download();
+            this.download();
         } catch (IOException e) {
-            System.out.println(e.getMessage());
+            e.printStackTrace();
         }
+    }
+
+    @Override
+    public void initDownload() {
+        thisThread.start();
+    }
+
+    @Override
+    public void pause() throws OperationNotSupportedException {
+        throw new OperationNotSupportedException("Pause is not available for single-threaded downloads");
+    }
+
+    @Override
+    public void resume() throws OperationNotSupportedException {
+        if (this.resumable == false){
+            throw new OperationNotSupportedException();
+        } else {
+            System.out.println("Attempting to resume");
+        }
+    }
+
+    @Override
+    public String toString() {
+        return "SingleThreaded downloader";
     }
 
     private void download() throws IOException {
-        HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty( "charset", "utf-8");
-        conn.setRequestProperty("Content-Language", "en-US");
-        conn.connect();
+        HttpURLConnection conn = null;
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            conn = (HttpURLConnection) downloadLink.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty( "charset", "utf-8");
+            conn.setRequestProperty("Content-Language", "en-US");
+            conn.connect();
 
-        InputStream is = conn.getInputStream();
+            is = conn.getInputStream();
 
-        OutputStream os = new BufferedOutputStream(new FileOutputStream(path));
-        int c;
-        int count = 0;
-        while ((c = is.read()) != -1){
-            count++;
-            os.write(c);
+            os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
+            int c;
+            long count = 0;
+            while ((c = is.read()) != -1){
+                count++;
+                os.write(c);
+            }
+            System.out.println(count);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            is.close();
+            os.close();
+            conn.disconnect();
         }
-        System.out.println(count);
-
     }
+
 }

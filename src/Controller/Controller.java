@@ -1,45 +1,79 @@
 package Controller;
 
-import Downloaders.MultiThreadedDownloader;
-import Downloaders.SingleThreadedDownloader;
+import Downloaders.DownloaderFactory;
+import Downloaders.DownloadEntry;
+import Util.BackupManager;
+import Util.Configs;
 
+import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.NoRouteToHostException;
+
 import java.net.URL;
+import java.util.ArrayList;
 
 public class Controller {
-    URL url;
+    private static BackupManager backupManager;
+    private static ArrayList<DownloadEntry> entries;
+    private static Controller controller = null;
 
-    public Controller(URL url) {
-        //todo: handle malform url from the main function
-        this.url = url;
-
-        try{
-            boolean supportRange = pollForRangeSupport();
-            Integer fileSize = pollForFileSize();
-
-            System.out.println(supportRange + " " + fileSize);
-
-            if (supportRange == true && fileSize != -1){
-                //initialize multithreaded download
-                System.out.println("This supports range");
-                MultiThreadedDownloader mTD = new MultiThreadedDownloader(this.url, fileSize);
-            }else {
-//                initialize single threaded download
-                SingleThreadedDownloader sTD = new SingleThreadedDownloader(this.url);
-            }
-
-        } catch (NoRouteToHostException e){ // redundant catch, NoRouteToHost is IOException
-            System.out.println(e.getMessage());
-        } catch (IOException e) {
-            System.out.println(e.getMessage());
-        }
-
+    private Controller() {
     }
 
-    private boolean pollForRangeSupport() throws IOException {
+    public static Controller getInstance() {
+        if (controller == null) {
+            controller = new Controller();
+            backupManager = new BackupManager();
+            //initialize entries list
+            try {
+                entries = Util.EntryWriter.readFromFile(Configs.history);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        return controller;
+    }
+
+    //todo: handle malformed url from the main function
+    public void addDownload(URL url, String fileName, String downloadDir) {
+        System.out.println(Controller.entries);
+        try{
+            boolean resumable = pollForRangeSupport(url);
+            Long fileSize = pollForFileSize(url);
+
+            System.out.println(resumable + " "  + fileSize);
+
+            DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
+                    fileSize, url, downloadDir, fileName);
+            de.initDownload(); //todo: should throw error if de is null
+            System.out.println("adding entries");
+            Controller.getInstance().addToEntryList(de);
+
+            System.out.println("returning from add download");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void deleteDownload(int index){
+        if(index < 0 || index >= entries.size())
+            return;
+
+        entries.remove(index);
+    }
+
+    public void pauseDownload(int index) throws OperationNotSupportedException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        de.pause();
+    }
+
+    public void resumeDownload(int index) throws OperationNotSupportedException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        de.resume();
+    }
+
+    private boolean pollForRangeSupport(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -48,6 +82,7 @@ public class Controller {
         conn.connect();
 
         int status = conn.getResponseCode();
+        System.out.println("Status code is: "+ status);
 
         if (status == HttpURLConnection.HTTP_PARTIAL) {
             return true;
@@ -56,7 +91,7 @@ public class Controller {
         return false;
     }
 
-    private Integer pollForFileSize() throws IOException {
+    private Long pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -68,21 +103,47 @@ public class Controller {
         if (status == HttpURLConnection.HTTP_OK ){
             if (conn.getHeaderFields().containsKey("Content-Length")) {
                 try {
-                    Integer size = Integer.parseInt(conn.getHeaderFields().get("Content-Length").get(0));
+                    Long size = Long.parseLong(conn.getHeaderFields().get("Content-Length").get(0));
                     return size;
                 } catch (NumberFormatException e) {
-                    return -1;
+                    e.printStackTrace();
+                    return -1l;
                 }
             }
         }
-        return -1;
+        return -1l;
+    }
+
+    private synchronized void updateAt(int index, DownloadEntry entry){
+        DownloadEntry oldEntry = entries.get(index);
+        oldEntry = entry;
+    }
+
+    private synchronized void addToEntryList(DownloadEntry entry){
+        entries.add(entry);
+        BackupManager.backup(entries);
+    }
+
+    private synchronized void removeAt(int index) throws IndexOutOfBoundsException{
+        entries.remove(index);
+        BackupManager.backup(entries);
+    }
+
+    public DownloadEntry getEntryAt(int idx){
+        return entries.get(idx);
+    }
+
+    public ArrayList<DownloadEntry> getEntries(){
+        return entries;
     }
 
     public static void main(String[] args) {
-        try {
-            Controller controller = new Controller(new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"));
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
+//        try {
+//            Controller controller = new Controller();
+//            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
+//
+//        } catch (MalformedURLException e) {
+//            System.out.println(e.getMessage());
+//        }
     }
 }
