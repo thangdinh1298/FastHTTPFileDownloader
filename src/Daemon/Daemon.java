@@ -17,6 +17,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
 
 public class Daemon {
     public Daemon() throws IOException {
@@ -32,7 +33,7 @@ public class Daemon {
         server.createContext("/pause", new pauseHandler());
         server.createContext("/resume", new resumeHandler());
         server.createContext("/delete", new deleteHandler());
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(Executors.newSingleThreadExecutor()); // creates a default executor
         server.start();
     }
 
@@ -40,6 +41,7 @@ public class Daemon {
 
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
+            System.out.println("Called");
             if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")){
                 String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
                 String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");

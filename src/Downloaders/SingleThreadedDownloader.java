@@ -5,13 +5,11 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
-    private transient Thread thisThread;
+public class SingleThreadedDownloader extends DownloadEntry{
 
     //todo: close streams!!!! by handling error inside download function
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
         super(url, downloadDir, fileName, resumable);
-        thisThread = new Thread(this);
         this.threadNum = 1;
     }
 
@@ -24,10 +22,6 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
         }
     }
 
-    @Override
-    public void initDownload() {
-        thisThread.start();
-    }
 
     @Override
     public void pause() throws OperationNotSupportedException {
