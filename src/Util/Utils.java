@@ -12,12 +12,12 @@ import java.util.Map;
 
 
 public class Utils {
-    public static void writeResponse(HttpExchange httpExchange, String msg, int code){
+    public static void writeResponse(HttpExchange httpExchange, String msg){
         OutputStream os = httpExchange.getResponseBody();
 
         byte[] b = msg.getBytes(Charset.defaultCharset());
         try {
-            httpExchange.sendResponseHeaders(code, b.length);
+            httpExchange.sendResponseHeaders(200, b.length);
             os.write(b);
         } catch (IOException e) {
             e.printStackTrace();
