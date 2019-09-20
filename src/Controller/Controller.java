@@ -19,7 +19,7 @@ public class Controller {
     private static ExecutorService executorService;
     private static BackupManager backupManager;
     private static ArrayList<DownloadEntry> entries;
-    private static ArrayList<Future> futures;
+//    private static ArrayList<Future> futures;
     private static Controller controller = null;
 
     private Controller() {
@@ -30,7 +30,7 @@ public class Controller {
             controller = new Controller();
             backupManager = new BackupManager();
             executorService = Executors.newFixedThreadPool(Configs.THREAD_POOL_SIZE);
-            futures = new ArrayList<>();
+//            futures = new ArrayList<>();
             //initialize entries list
             try {
                 entries = Util.EntryWriter.readFromFile(Configs.history);
@@ -61,14 +61,16 @@ public class Controller {
         System.out.println("SHIT");
     }
 
-    public void deleteDownload(int index){
-        if(index < 0 || index >= entries.size())
-            return;
-        if(!futures.get(index).isCancelled()){//todo: check if cancelled successfully
-            futures.get(index).cancel(true);
+    public void deleteDownload(int index) throws IndexOutOfBoundsException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        try {
+            de.pause();
+        } catch (OperationNotSupportedException e) {
+            e.printStackTrace();
         }
-        futures.remove(index);
-        entries.remove(index);
+        System.out.println("Exception");
+        //todo: add logic: delete all segments, if merging then somehow delete the merging file
+        Controller.getInstance().removeAt(index);
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {
@@ -78,7 +80,8 @@ public class Controller {
 
     public void resumeDownload(int index) throws OperationNotSupportedException {
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
-        futures.set(index, executorService.submit(de));
+//        futures.set(index, executorService.submit(de));
+        executorService.submit(de);
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {
@@ -136,8 +139,8 @@ public class Controller {
         entries.add(entry);
         Future future = executorService.submit(entry);
         System.out.println("Submtitted");
-        futures.add(future);
-        System.out.println("Added to future list");
+//        futures.add(future);
+//        System.out.println("Added to future list");
         BackupManager.backup(entries);
     }
 

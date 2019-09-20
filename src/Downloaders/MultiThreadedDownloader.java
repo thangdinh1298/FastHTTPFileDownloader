@@ -15,11 +15,13 @@ import java.util.concurrent.Future;
 public class MultiThreadedDownloader extends DownloadEntry{
     private static final long serialVersionUID = -7221155498655620062l;
     private transient Future[] futures;
-    //todo: close streams!!!! by handling error inside download function
+
     public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
         this.threadNum = Configs.THREAD_NUM;
+        //todo: this is a temporay solution to fix NullPointerException when entries are loaded from files and futures are not initialized. For a sound solution, State should be implemented
+        futures = new Future[this.threadNum];
     }
 
     @Override

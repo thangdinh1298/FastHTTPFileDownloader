@@ -148,6 +148,9 @@ public class Daemon {
                 Utils.writeResponse(httpExchange, "deleted successfully", 200);
             }catch (NumberFormatException e){
                 e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided wasn't a number", 400);
+            }catch (IndexOutOfBoundsException e){
+                System.out.println("Index out of bound");
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
             }
         }
