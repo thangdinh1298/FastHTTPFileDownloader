@@ -35,7 +35,6 @@ public class Daemon {
         server.setExecutor(null); // creates a default executor
         server.start();
     }
-
     static class downloadHandler implements HttpHandler{
 
         @Override

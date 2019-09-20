@@ -4,6 +4,7 @@ import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
 import Util.BackupManager;
 import Util.Configs;
+import Util.FileManager;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
@@ -60,7 +61,15 @@ public class Controller {
         if(index < 0 || index >= entries.size())
             return;
 
-        entries.remove(index);
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        try {
+            this.pauseDownload(index);
+        }
+        catch(OperationNotSupportedException e){
+            System.out.println("error: OperationNotSupportedException when deleting download index: "+index);
+        }
+        FileManager.delete(de);
+        this.removeAt(index);
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {

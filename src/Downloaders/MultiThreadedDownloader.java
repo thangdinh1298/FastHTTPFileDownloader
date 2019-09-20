@@ -1,5 +1,7 @@
 package Downloaders;
 
+import Util.FileManager;
+
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -120,6 +122,7 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             if (os != null) os.close();
             if (is != null) is.close();
         }
+        FileManager.delete(this);
     }
 
     private class DownloadThread implements Runnable {
