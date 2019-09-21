@@ -1,5 +1,7 @@
 package Downloaders;
 
+import Controller.Controller;
+
 import javax.naming.OperationNotSupportedException;
 import java.io.FileOutputStream;
 import java.io.ObjectOutputStream;
@@ -37,8 +39,13 @@ public class DownloadEntry implements Serializable, Runnable {
         return state;
     }
 
+    public void initState(State state) {
+        this.state = state;
+    }
+
     public void setState(State state) {
         this.state = state;
+        Controller.getInstance().backup();
     }
 
     public Long getFileSize() {

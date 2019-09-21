@@ -45,7 +45,7 @@ public class EntryWriter {
                     if (entry.getState() == DownloadEntry.State.DOWNLOADING){
                         de.setState(DownloadEntry.State.PAUSED);
                     } else{
-                        de.setState(entry.getState());
+                        de.initState(entry.getState());
                     }
                     entries.add(de);
                 }

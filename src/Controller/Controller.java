@@ -130,24 +130,26 @@ public class Controller {
         return -1l;
     }
 
+    public void backup (){
+        BackupManager.backup(entries);
+    }
+
     private synchronized void updateAt(int index, DownloadEntry entry){
         DownloadEntry oldEntry = entries.get(index);
         oldEntry = entry;
     }
 
     private synchronized void addToEntryList(DownloadEntry entry){
-        System.out.println("Adding to entry list");
         entries.add(entry);
         Future future = executorService.submit(entry);
-        System.out.println("Submtitted");
-//        futures.add(future);
-//        System.out.println("Added to future list");
-        BackupManager.backup(entries);
+
+        backup();
     }
 
     private synchronized void removeAt(int index) throws IndexOutOfBoundsException{
         entries.remove(index);
-        BackupManager.backup(entries);
+
+        backup();
     }
 
     public DownloadEntry getEntryAt(int idx) throws IndexOutOfBoundsException{
