@@ -51,18 +51,19 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 if (this.futures[i] != null) this.futures[i].get();
 
             } catch (InterruptedException e) {
-                System.out.println("Job cancelled mid execution");
+//                System.out.println("Job cancelled mid execution");
                 e.printStackTrace();
             } catch (ExecutionException e) {
                 e.printStackTrace();
             } catch (CancellationException e){
-                System.out.println("Job cancelled before execution");
-                e.printStackTrace();
+                System.out.println("Job cancelled");
+//                e.printStackTrace();
             }
         }
     }
 
     private void download() throws IOException {
+        this.setState(State.DOWNLOADING);
         futures = new Future[this.threadNum];
 
         long segmentSize = this.fileSize / this.threadNum;
@@ -94,12 +95,15 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 if (futures[i] != null) futures[i].get();
             } catch (InterruptedException e) {
                 //immediately returns if download thread is interrupted
+                this.setState(State.PAUSED);
                 e.printStackTrace();
                 return;
             } catch (CancellationException e) {
+                this.setState(State.PAUSED);
                 e.printStackTrace();
                 return;
             } catch (ExecutionException e) {
+                this.setState(State.PAUSED);
                 e.printStackTrace();
                 return;
             }
@@ -125,7 +129,9 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 is.close(); /* ?? */
             }
             System.out.println("File size is " + count);
+            this.setState(State.COMPLETED);
         } catch (IOException e) {
+            this.setState(State.PAUSED);
             throw new IOException("Can't open file for merging");
         } finally{
             if (os != null) os.close();

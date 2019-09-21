@@ -41,7 +41,6 @@ public class Daemon {
 
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
-            System.out.println("Called");
             if (httpExchange.getRequestMethod().equalsIgnoreCase("POST")){
                 String fileName = httpExchange.getRequestHeaders().getFirst("file-name");
                 String downloadDir = httpExchange.getRequestHeaders().getFirst("download-dir");
@@ -101,10 +100,12 @@ public class Daemon {
                 Utils.writeResponse(httpExchange, "paused successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
+                Utils.writeResponse(httpExchange, "Index provided isn't a valid number");
+            } catch (IndexOutOfBoundsException e){
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid");
             } catch (OperationNotSupportedException e) {
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid");
+                Utils.writeResponse(httpExchange, "Pause not supported for this download");
             }
         }
     }

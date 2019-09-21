@@ -84,7 +84,7 @@ public class Utils {
             StringBuilder builder = new StringBuilder();
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             while((line = in.readLine()) != null){
-                builder.append(line);
+                builder.append(line + "\n");
             }
             in.close();
             System.out.println(builder.toString());

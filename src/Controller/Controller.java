@@ -58,7 +58,6 @@ public class Controller {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        System.out.println("SHIT");
     }
 
     public void deleteDownload(int index) throws IndexOutOfBoundsException {
@@ -74,7 +73,9 @@ public class Controller {
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {
+
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
+
         de.pause();
     }
 
@@ -149,7 +150,7 @@ public class Controller {
         BackupManager.backup(entries);
     }
 
-    public DownloadEntry getEntryAt(int idx){
+    public DownloadEntry getEntryAt(int idx) throws IndexOutOfBoundsException{
         return entries.get(idx);
     }
 
