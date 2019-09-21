@@ -11,10 +11,15 @@ import java.net.HttpURLConnection;
 
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class Controller {
+    private static ExecutorService executorService;
     private static BackupManager backupManager;
     private static ArrayList<DownloadEntry> entries;
+//    private static ArrayList<Future> futures;
     private static Controller controller = null;
 
     private Controller() {
@@ -24,6 +29,8 @@ public class Controller {
         if (controller == null) {
             controller = new Controller();
             backupManager = new BackupManager();
+            executorService = Executors.newFixedThreadPool(Configs.THREAD_POOL_SIZE);
+//            futures = new ArrayList<>();
             //initialize entries list
             try {
                 entries = Util.EntryWriter.readFromFile(Configs.history);
@@ -36,7 +43,6 @@ public class Controller {
 
     //todo: handle malformed url from the main function
     public void addDownload(URL url, String fileName, String downloadDir) {
-        System.out.println(Controller.entries);
         try{
             boolean resumable = pollForRangeSupport(url);
             Long fileSize = pollForFileSize(url);
@@ -45,32 +51,38 @@ public class Controller {
 
             DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                     fileSize, url, downloadDir, fileName);
-            de.initDownload(); //todo: should throw error if de is null
-            System.out.println("adding entries");
-            Controller.getInstance().addToEntryList(de);
-
-            System.out.println("returning from add download");
+            if (de != null){
+                Controller.getInstance().addToEntryList(de);
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void deleteDownload(int index){
-        if(index < 0 || index >= entries.size())
-            return;
-
-        entries.remove(index);
+    public void deleteDownload(int index) throws IndexOutOfBoundsException {
+        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+        try {
+            de.pause();
+        } catch (OperationNotSupportedException e) {
+            e.printStackTrace();
+        }
+        System.out.println("Exception");
+        //todo: add logic: delete all segments, if merging then somehow delete the merging file
+        Controller.getInstance().removeAt(index);
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {
+
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
+
         de.pause();
     }
 
     public void resumeDownload(int index) throws OperationNotSupportedException {
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
-        de.resume();
+//        futures.set(index, executorService.submit(de));
+        executorService.submit(de);
     }
 
     private boolean pollForRangeSupport(URL url) throws IOException {
@@ -89,6 +101,10 @@ public class Controller {
         }
 
         return false;
+    }
+
+    public static ExecutorService getExecutorService() {
+        return executorService;
     }
 
     private Long pollForFileSize(URL url) throws IOException {
@@ -120,7 +136,12 @@ public class Controller {
     }
 
     private synchronized void addToEntryList(DownloadEntry entry){
+        System.out.println("Adding to entry list");
         entries.add(entry);
+        Future future = executorService.submit(entry);
+        System.out.println("Submtitted");
+//        futures.add(future);
+//        System.out.println("Added to future list");
         BackupManager.backup(entries);
     }
 
@@ -129,7 +150,7 @@ public class Controller {
         BackupManager.backup(entries);
     }
 
-    public DownloadEntry getEntryAt(int idx){
+    public DownloadEntry getEntryAt(int idx) throws IndexOutOfBoundsException{
         return entries.get(idx);
     }
 

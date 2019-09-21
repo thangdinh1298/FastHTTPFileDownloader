@@ -36,10 +36,17 @@ public class EntryWriter {
             inputStream =  new ObjectInputStream(new FileInputStream(history));
             while (true) {
                 entry = (DownloadEntry) inputStream.readObject();
+                System.out.println("Entry is: " + entry);
+
                 DownloadEntry de = DownloaderFactory.getDownloadEntry(entry.isResumable(),
                         entry.getFileSize(), entry.getDownloadLink(), entry.getDownloadDir(), entry.getFileName());
 
                 if (de != null){
+                    if (entry.getState() == DownloadEntry.State.DOWNLOADING){
+                        de.setState(DownloadEntry.State.PAUSED);
+                    } else{
+                        de.setState(entry.getState());
+                    }
                     entries.add(de);
                 }
             }

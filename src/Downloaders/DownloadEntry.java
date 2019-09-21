@@ -7,7 +7,7 @@ import java.io.Serializable;
 import java.net.URL;
 import java.nio.file.Paths;
 
-public class DownloadEntry implements Serializable {
+public class DownloadEntry implements Serializable, Runnable {
     private static final long serialVersionUID = -5615651863970612799l;
     protected URL downloadLink;
     protected String downloadDir;
@@ -15,7 +15,7 @@ public class DownloadEntry implements Serializable {
     protected long fileSize;
     protected int threadNum;
     protected boolean resumable;
-//    protected State state;
+    protected State state;
 
     public DownloadEntry(URL downloadLink, String downloadDir, String fileName,
                          boolean resumable) {
@@ -23,18 +23,23 @@ public class DownloadEntry implements Serializable {
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
-//        this.state = State.PAUSED;
     }
 
-//    public enum State {
-//        PAUSED,
-//
-//        DOWNLOADING,
-//
-//        COMPLETED
-//    }
+    public enum State {
+        PAUSED,
 
-    public void initDownload() {}
+        DOWNLOADING,
+
+        COMPLETED,
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
+    }
 
     public Long getFileSize() {
         return fileSize;
@@ -74,11 +79,15 @@ public class DownloadEntry implements Serializable {
 
     @Override
     public String toString() {
-        return String.format("%s\t", this.getAbsolutePath());
+        return String.format("%s\t%s", this.getAbsolutePath(), this.getState());
     }
 
     public String getAbsolutePath() {
         return String.valueOf(Paths.get(downloadDir, fileName));
     }
 
+    @Override
+    public void run() {
+
+    }
 }

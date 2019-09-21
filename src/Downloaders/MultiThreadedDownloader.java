@@ -1,20 +1,27 @@
 package Downloaders;
 
+import Controller.Controller;
+import Util.Configs;
+
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
-    private transient Thread[] threads;
-    private transient Thread thisThread;
+public class MultiThreadedDownloader extends DownloadEntry{
+    private static final long serialVersionUID = -7221155498655620062l;
+    private transient Future[] futures;
 
-    //todo: close streams!!!! by handling error inside download function
     public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
-        this.threadNum = 4;
+        this.threadNum = Configs.THREAD_NUM;
+        //todo: this is a temporay solution to fix NullPointerException when entries are loaded from files and futures are not initialized. For a sound solution, State should be implemented
+        futures = new Future[this.threadNum];
     }
 
     @Override
@@ -27,39 +34,37 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     @Override
-    public void initDownload() {
-        this.thisThread = new Thread(this);
-        thisThread.start();
-    }
-
-    @Override
     public void resume() throws OperationNotSupportedException {
-        this.thisThread = new Thread(this);
-        thisThread.start();
     }
 
     @Override
     public void pause() throws OperationNotSupportedException{
         synchronized (this){
-            for(Thread t: this.threads){
-                if (t != null) t.interrupt();
+            for(Future f: this.futures){
+                if (f != null && !f.isCancelled() && !f.isDone()) f.cancel(true);
             }
-            thisThread.interrupt();
         }
 
-        // wait for all threads to enter terminated state
-        try {
-            thisThread.join();
-            for (Thread t: this.threads){
-                t.join();
+        // wait for all jobs to enter terminated state
+        for(int i = 0; i < this.futures.length; i++){
+            try {
+                if (this.futures[i] != null) this.futures[i].get();
+
+            } catch (InterruptedException e) {
+//                System.out.println("Job cancelled mid execution");
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            } catch (CancellationException e){
+                System.out.println("Job cancelled");
+//                e.printStackTrace();
             }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
         }
     }
 
     private void download() throws IOException {
-        threads = new Thread[this.threadNum];
+        this.setState(State.DOWNLOADING);
+        futures = new Future[this.threadNum];
 
         long segmentSize = this.fileSize / this.threadNum;
         long leftOver = this.fileSize % this.threadNum;
@@ -80,16 +85,26 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
             chunkStartByte += segmentSize;
             if (chunkSize == 0) continue;
 
-            threads[i] = new Thread(new DownloadThread(chunkSize, startByte, i));
+            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(chunkSize, startByte, i));
+            System.out.println("Submitting task " + i);
 
-            threads[i].start();
         }
 
         for(int i = 0; i < this.threadNum; i++) {
             try {
-                if (threads[i] != null) threads[i].join();
+                if (futures[i] != null) futures[i].get();
             } catch (InterruptedException e) {
                 //immediately returns if download thread is interrupted
+                this.setState(State.PAUSED);
+                e.printStackTrace();
+                return;
+            } catch (CancellationException e) {
+                this.setState(State.PAUSED);
+                e.printStackTrace();
+                return;
+            } catch (ExecutionException e) {
+                this.setState(State.PAUSED);
+                e.printStackTrace();
                 return;
             }
         }
@@ -114,7 +129,9 @@ public class MultiThreadedDownloader extends DownloadEntry implements Runnable{
                 is.close(); /* ?? */
             }
             System.out.println("File size is " + count);
+            this.setState(State.COMPLETED);
         } catch (IOException e) {
+            this.setState(State.PAUSED);
             throw new IOException("Can't open file for merging");
         } finally{
             if (os != null) os.close();

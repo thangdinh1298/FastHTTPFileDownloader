@@ -12,12 +12,12 @@ import java.util.Map;
 
 
 public class Utils {
-    public static void writeResponse(HttpExchange httpExchange, String msg, int code){
+    public static void writeResponse(HttpExchange httpExchange, String msg){
         OutputStream os = httpExchange.getResponseBody();
 
         byte[] b = msg.getBytes(Charset.defaultCharset());
         try {
-            httpExchange.sendResponseHeaders(code, b.length);
+            httpExchange.sendResponseHeaders(200, b.length);
             os.write(b);
         } catch (IOException e) {
             e.printStackTrace();
@@ -84,7 +84,7 @@ public class Utils {
             StringBuilder builder = new StringBuilder();
             BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
             while((line = in.readLine()) != null){
-                builder.append(line);
+                builder.append(line + "\n");
             }
             in.close();
             System.out.println(builder.toString());
