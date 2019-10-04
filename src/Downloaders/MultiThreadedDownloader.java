@@ -2,6 +2,7 @@ package Downloaders;
 
 import Controller.Controller;
 import Util.Configs;
+import Util.FileManager;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
@@ -11,17 +12,22 @@ import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class MultiThreadedDownloader extends DownloadEntry{
     private static final long serialVersionUID = -7221155498655620062l;
     private transient Future[] futures;
+    private transient DownloadThread[] tasks;
+//    private transient Long downloadedBytes;
 
     public MultiThreadedDownloader(URL url, Long fileSize, String downloadDir, String fileName) throws IOException{
         super(url, downloadDir, fileName, true);
         this.fileSize = fileSize;
         this.threadNum = Configs.THREAD_NUM;
         //todo: this is a temporay solution to fix NullPointerException when entries are loaded from files and futures are not initialized. For a sound solution, State should be implemented
-        futures = new Future[this.threadNum];
+        this.futures = new Future[this.threadNum];
+        this.tasks = new DownloadThread[this.threadNum];
+//        this.downloadedBytes = 0L;
     }
 
     @Override
@@ -39,6 +45,10 @@ public class MultiThreadedDownloader extends DownloadEntry{
 
     @Override
     public void pause() throws OperationNotSupportedException{
+        if(this.getState() == State.COMPLETED){
+            System.out.println("download completed!");
+            return;
+        }
         synchronized (this){
             for(Future f: this.futures){
                 if (f != null && !f.isCancelled() && !f.isDone()) f.cancel(true);
@@ -85,8 +95,10 @@ public class MultiThreadedDownloader extends DownloadEntry{
             chunkStartByte += segmentSize;
             if (chunkSize == 0) continue;
 
-            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(chunkSize, startByte, i));
+            this.tasks[i] = new DownloadThread(chunkSize, startByte, i);
+            this.futures[i] = Controller.getInstance().getExecutorService().submit(this.tasks[i]);
             System.out.println("Submitting task " + i);
+
 
         }
 
@@ -127,6 +139,8 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 }
                 os.flush();
                 is.close(); /* ?? */
+
+//                File.
             }
             System.out.println("File size is " + count);
             this.setState(State.COMPLETED);
@@ -137,28 +151,46 @@ public class MultiThreadedDownloader extends DownloadEntry{
             if (os != null) os.close();
             if (is != null) is.close();
         }
+        FileManager.delete(this);
+    }
+
+    public long getDownloadedBytes(){
+        Long downloadedBytes = 0L;
+        for(int i = 0; i < this.futures.length; ++i){
+            downloadedBytes += this.tasks[i].getCount();
+        }
+        return downloadedBytes;
+    }
+
+    public double getDownloadSpeed(){
+        Long last_downloaded = this.getDownloadedBytes();
+        int period_of_time = 1000;
+        try {
+            TimeUnit.MILLISECONDS.sleep(period_of_time);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        Long current_downloaded = this.getDownloadedBytes();
+        return (current_downloaded-last_downloaded)*1000/((double)period_of_time*period_of_time);
     }
 
     private class DownloadThread implements Runnable {
         private long startByte;
         private long chunkSize; //num bytes to download including the start byte
         private int threadID;
+        private long count;
+//        private boolean completed;
+//        private
+
+        HttpURLConnection conn = null;
+        InputStream is = null;
+        OutputStream os = null;
 
         public DownloadThread(long chunkSize, long startByte, int threadID) {
             this.chunkSize = chunkSize;
             this.startByte = startByte;
             this.threadID = threadID;
-        }
-
-        /*
-            todo: Figureout a way to propagate incompleted downloads downward in the call stack
-         */
-        @Override
-        public void run() {
-//            System.out.println("Thread " + this.threadID + " is downloading from " + this.startByte + " to " + (this.startByte + this.chunkSize - 1) );
-            HttpURLConnection conn = null;
-            InputStream is = null;
-            OutputStream os = null;
+            this.count = 0;
 
             try {
                 conn = (HttpURLConnection) downloadLink.openConnection();
@@ -169,12 +201,29 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 conn.connect();
 
                 is = conn.getInputStream();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
 
+        }
+
+        /*
+            todo: Figureout a way to propagate incompleted downloads downward in the call stack
+         */
+
+        @Override
+        public void run() {
+//            System.out.println("Thread " + this.threadID + " is downloading from " + this.startByte + " to " + (this.startByte + this.chunkSize - 1) );
+
+            try {
                 os = new BufferedOutputStream(new FileOutputStream(String.valueOf(Paths.get(downloadDir, fileName + this.threadID)), true));
                 int c;
-                long count = 0;
+
                 while((c = is.read()) != -1 && !Thread.interrupted()){
-                    count++;
+//                    System.out.println(fileName + ": Thread "+ this.threadID + " is downloading");
+                    synchronized (this) {
+                        count++;
+                    }
                     os.write(c);
                 }
                 System.out.println("Thread " + this.threadID + " downloaded "  + count + " bytes");
@@ -200,6 +249,9 @@ public class MultiThreadedDownloader extends DownloadEntry{
                     }
                 }
             }
+        }
+        public long getCount(){
+            return this.count;
         }
     }
 }

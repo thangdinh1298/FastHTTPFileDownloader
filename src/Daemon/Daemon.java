@@ -33,6 +33,7 @@ public class Daemon {
         server.createContext("/pause", new pauseHandler());
         server.createContext("/resume", new resumeHandler());
         server.createContext("/delete", new deleteHandler());
+        server.createContext("/getDownloadSpeed", new downloadSpeedHandler());
         server.setExecutor(Executors.newSingleThreadExecutor()); // creates a default executor
         server.start();
     }
@@ -152,6 +153,27 @@ public class Daemon {
                 Utils.writeResponse(httpExchange, "Index provided wasn't a number");
             }catch (IndexOutOfBoundsException e){
                 System.out.println("Index out of bound");
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid");
+            }
+        }
+    }
+
+    static class downloadSpeedHandler implements HttpHandler {
+        @Override
+        public void handle(HttpExchange httpExchange) throws IOException {
+            System.out.println("Request received");
+            String index = httpExchange.getRequestHeaders().getFirst("index");
+
+            if (index == null){
+                Utils.writeResponse(httpExchange, "An index was not provided");
+            }
+
+            try{
+                int idx = Integer.parseInt(index);
+                double downloadSpeed = Controller.getInstance().getEntryAt(idx).getDownloadSpeed()/1024;
+                Utils.writeResponse(httpExchange, idx+": download speed: "+downloadSpeed+"KB/s");
+            }catch (NumberFormatException e){
+                e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid");
             }
         }

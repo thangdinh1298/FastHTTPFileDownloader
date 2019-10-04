@@ -4,6 +4,7 @@ import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
 import Util.BackupManager;
 import Util.Configs;
+import Util.FileManager;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
@@ -61,15 +62,18 @@ public class Controller {
     }
 
     public void deleteDownload(int index) throws IndexOutOfBoundsException {
+        if(index < 0 || index >= entries.size())
+            return;
+
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
         try {
-            de.pause();
-        } catch (OperationNotSupportedException e) {
-            e.printStackTrace();
+            this.pauseDownload(index);
         }
-        System.out.println("Exception");
-        //todo: add logic: delete all segments, if merging then somehow delete the merging file
-        Controller.getInstance().removeAt(index);
+        catch(OperationNotSupportedException e){
+            System.out.println("error: OperationNotSupportedException when deleting download index: "+index);
+        }
+        FileManager.delete(de);
+        this.removeAt(index);
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {
@@ -82,6 +86,7 @@ public class Controller {
     public void resumeDownload(int index) throws OperationNotSupportedException {
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
 //        futures.set(index, executorService.submit(de));
+        de.setState(DownloadEntry.State.DOWNLOADING);
         executorService.submit(de);
     }
 

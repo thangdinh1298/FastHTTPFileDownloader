@@ -47,6 +47,13 @@ public class Client {
         Utils.doGet(endpoint, headers);
     }
 
+    public void getDownloadSpeed(String index){
+        String endpoint = DAEMON_ADDR +  "/" + "getDownloadSpeed";
+        HashMap<String, String> headers = new HashMap<String, String>();
+        headers.put("index", index);
+        Utils.doGet(endpoint, headers);
+    }
+
     public static void main(String[] args) {
         Client client = new Client();
 
@@ -76,6 +83,10 @@ public class Client {
             case "deletedownload":
                 index = args[1];
                 client.deleteDownload(index);
+                break;
+            case "getDownloadSpeed":
+                index = args[1];
+                client.getDownloadSpeed(index);
                 break;
             default:
                 System.out.println("Operation not supported");

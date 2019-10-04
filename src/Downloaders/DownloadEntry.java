@@ -77,6 +77,9 @@ public class DownloadEntry implements Serializable, Runnable {
 
     public void pause() throws OperationNotSupportedException {}
 
+    public long getDownloadedBytes(){return  0L;}
+    public double getDownloadSpeed(){return 0L;};
+
     @Override
     public String toString() {
         return String.format("%s\t%s", this.getAbsolutePath(), this.getState());
