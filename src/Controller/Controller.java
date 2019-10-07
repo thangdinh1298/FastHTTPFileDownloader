@@ -151,7 +151,7 @@ public class Controller {
     private synchronized void addToEntryList(DownloadEntry entry){
         System.out.println("Adding to entry list");
         entries.add(entry);
-        Future future = executorService.submit(entry);
+        entry.download();
         System.out.println("Submtitted");
 //        futures.add(future);
 //        System.out.println("Added to future list");
