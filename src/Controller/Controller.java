@@ -86,6 +86,14 @@ public class Controller {
     public void resumeDownload(int index) throws OperationNotSupportedException {
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
 //        futures.set(index, executorService.submit(de));
+        if(de.getState() == DownloadEntry.State.COMPLETED){
+            System.out.println("Downloaded completed!!");
+            return;
+        }
+        else if(de.getState() == DownloadEntry.State.DOWNLOADING){
+            System.out.println("Downloading...");
+            return;
+        }
         de.setState(DownloadEntry.State.DOWNLOADING);
         executorService.submit(de);
     }
