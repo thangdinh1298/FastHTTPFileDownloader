@@ -1,9 +1,14 @@
 package Downloaders;
 
+import Controller.Controller;
+
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class SingleThreadedDownloader extends DownloadEntry{
 
@@ -43,32 +48,31 @@ public class SingleThreadedDownloader extends DownloadEntry{
     }
 
     private void download() throws IOException {
-        HttpURLConnection conn = null;
-        InputStream is = null;
-        OutputStream os = null;
+        this.setState(State.DOWNLOADING);
+        if(this.futures == null) {
+            futures = new Future[this.threadNum];
+        }
+        if (this.resumable == true){
+            long bytesDownloaded = new File(this.getAbsolutePath()).length();
+            this.futures[0] = Controller.getInstance().getExecutorService().submit(new DownloadThread(bytesDownloaded));
+        } else {
+            this.futures[0] = Controller.getInstance().getExecutorService().submit(new DownloadThread(0));
+        }
+
+
         try {
-            conn = (HttpURLConnection) downloadLink.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty( "charset", "utf-8");
-            conn.setRequestProperty("Content-Language", "en-US");
-            conn.connect();
-
-            is = conn.getInputStream();
-
-            os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
-            int c;
-            long count = 0;
-            while ((c = is.read()) != -1){
-                count++;
-                os.write(c);
-            }
-            System.out.println(count);
-        } catch (IOException e) {
+            this.futures[0].get();
+            this.setState(State.COMPLETED);
+        } catch (InterruptedException e) {
+            this.setState(State.PAUSED);
+            this.futures[0].cancel(true);
             e.printStackTrace();
-        } finally {
-            is.close();
-            os.close();
-            conn.disconnect();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (CancellationException e) {
+            this.setState(State.PAUSED);
+            e.printStackTrace();
+            return;
         }
     }
 

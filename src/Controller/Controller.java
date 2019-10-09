@@ -9,6 +9,7 @@ import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -19,7 +20,6 @@ public class Controller {
     private static ExecutorService executorService;
     private static BackupManager backupManager;
     private static ArrayList<DownloadEntry> entries;
-//    private static ArrayList<Future> futures;
     private static Controller controller = null;
 
     private Controller() {
@@ -30,7 +30,6 @@ public class Controller {
             controller = new Controller();
             backupManager = new BackupManager();
             executorService = Executors.newFixedThreadPool(Configs.THREAD_POOL_SIZE);
-//            futures = new ArrayList<>();
             //initialize entries list
             try {
                 entries = Util.EntryWriter.readFromFile(Configs.history);
@@ -161,12 +160,12 @@ public class Controller {
     }
 
     public static void main(String[] args) {
-//        try {
-//            Controller controller = new Controller();
-//            controller.addDownload( new URL("https://cdimage.kali.org/kali-2019.3/kali-linux-2019.3-amd64.iso"));
-//
-//        } catch (MalformedURLException e) {
-//            System.out.println(e.getMessage());
-//        }
+        try {
+            Controller controller = new Controller();
+            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"),"test.pdf","downloadDir");
+
+        } catch (MalformedURLException e) {
+            System.out.println(e.getMessage());
+        }
     }
 }

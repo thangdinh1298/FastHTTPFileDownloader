@@ -14,7 +14,7 @@ public class DownloaderFactory {
             if (resumable == true && fileSize != -1){
                 //initialize multithreaded download
                 System.out.println("This supports range");
-                return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
+                return new SingleThreadedDownloader(url, downloadDir, fileName, false);
             }else {
                 if (resumable == true){
                     return new SingleThreadedDownloader(url, downloadDir, fileName, true);
