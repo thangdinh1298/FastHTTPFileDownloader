@@ -6,6 +6,7 @@ import Util.Configs;
 import org.junit.Assert;
 
 
+import javax.naming.OperationNotSupportedException;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -16,7 +17,6 @@ public class ControllerTest {
 
     public ControllerTest() {
         this.controller = Controller.getInstance();
-        this.deleteFolder(new File("downloadDir"));
     }
 
     public void deleteFolder(File folder){
@@ -35,7 +35,7 @@ public class ControllerTest {
     }
 
     // pause test suite
-    public void initPauseSuite(){
+    public void initDownload(){
         //Single-threaded download
         String fileURL = "http://mirrors.evowise.com/archlinux/iso/2019.09.01/archlinux-bootstrap-2019.09.01-x86_64.tar.gz";
         String fileName = "test.pdf";
@@ -48,24 +48,74 @@ public class ControllerTest {
 
         //Multi-threaded download
     }
-    public void pauseFinished(){
-        initPauseSuite();
+
+    public void cleanUpDownloadEntry(int index){
+        try{
+            controller.deleteDownload(0);
+        } catch (Exception e){
+            Assert.fail("Could not clean up download");
+        }
+    }
+
+    public boolean paused(DownloadEntry de){
+        try {
+            de.pause();
+        } catch (CancellationException e) {
+            return true;
+        } catch (Exception e) {
+
+        }
+        return false;
+    }
+    //Test that when pausing a finished download, nothing actually happened
+    public void testPauseFinishedDownload(){
+        initDownload();
         DownloadEntry de =controller.getEntryAt(0);
         while(de.getState() != DownloadEntry.State.COMPLETED){
             System.out.println(de.getState());
         }
+
+        Assert.assertFalse(paused(de));
+        cleanUpDownloadEntry(0);
+    }
+
+    public void testSuccessfulPause() {
+        initDownload();
+        DownloadEntry de =controller.getEntryAt(0);
         try {
-            de.pause();
-        } catch (CancellationException e) {
-            Assert.fail("No cancellation exception was supposed to be thrown because all threads have stopped");
-        } catch (Exception e) {
-            Assert.fail(e.getMessage());
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            Assert.fail("Failed while downloading");
         }
-        System.out.println("Done");
+
+        Assert.assertTrue(paused(de));
+    }
+
+    public interface Test{
+        void run();
     }
 
     public static void main(String[] args) {
-        ControllerTest test = new ControllerTest();
-        test.pauseFinished();
+        ControllerTest testController = new ControllerTest();
+        testController.testPauseFinishedDownload();
+        Test[] tests = new Test[] {
+                new Test() {
+                    @Override
+                    public void run() {
+                        testController.testPauseFinishedDownload();
+                    }
+                },
+                new Test() {
+                    @Override
+                    public void run() {
+                        testController.testSuccessfulPause();
+                    }
+                }
+        };
+
+        for (Test t: tests){
+            testController.deleteFolder(new File("downloadDir"));
+            t.run();
+        }
     }
 }
