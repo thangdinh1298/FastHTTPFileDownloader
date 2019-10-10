@@ -2,8 +2,7 @@ package Controller;
 
 import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
-import Util.BackupManager;
-import Util.Configs;
+import Util.*;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
@@ -21,10 +20,20 @@ public class Controller {
     private static BackupManager backupManager;
     private static ArrayList<DownloadEntry> entries;
     private static Controller controller = null;
+    private static DownloadSpeed downloadSpeed = null;
+    private static SServer sServer;
 
     private Controller() {
     }
 
+    public static DownloadSpeed getDownloadSpeed(){
+        return downloadSpeed;
+    }
+
+    public static SServer getsServer(){
+        return sServer;
+    }
+    
     public static Controller getInstance() {
         if (controller == null) {
             controller = new Controller();
@@ -36,6 +45,13 @@ public class Controller {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+            downloadSpeed = new DownloadSpeed(entries);
+            Thread tds = new Thread(downloadSpeed);
+            tds.start();
+
+            sServer = new SServer(downloadSpeed);
+            Thread tss = new Thread(sServer);
+            tss.start();
         }
         return controller;
     }
@@ -50,6 +66,7 @@ public class Controller {
 
             DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                     fileSize, url, downloadDir, fileName);
+
             if (de != null){
                 Controller.getInstance().addToEntryList(de);
             }
@@ -60,15 +77,18 @@ public class Controller {
     }
 
     public void deleteDownload(int index) throws IndexOutOfBoundsException {
+        if(index < 0 || index >= entries.size())
+            return;
+
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
         try {
-            de.pause();
-        } catch (OperationNotSupportedException e) {
-            e.printStackTrace();
+            this.pauseDownload(index);
         }
-        System.out.println("Exception");
-        //todo: add logic: delete all segments, if merging then somehow delete the merging file
-        Controller.getInstance().removeAt(index);
+        catch(OperationNotSupportedException e){
+            System.out.println("error: OperationNotSupportedException when deleting download index: "+index);
+        }
+        FileManager.delete(de);
+        this.removeAt(index);
     }
 
     public void pauseDownload(int index) throws OperationNotSupportedException {
@@ -81,6 +101,15 @@ public class Controller {
     public void resumeDownload(int index) throws OperationNotSupportedException {
         DownloadEntry de = Controller.getInstance().getEntryAt(index);
 //        futures.set(index, executorService.submit(de));
+        if(de.getState() == DownloadEntry.State.COMPLETED){
+            System.out.println("Downloaded completed!!");
+            return;
+        }
+        else if(de.getState() == DownloadEntry.State.DOWNLOADING){
+            System.out.println("Downloading...");
+            return;
+        }
+        de.setState(DownloadEntry.State.DOWNLOADING);
         executorService.submit(de);
     }
 
@@ -137,7 +166,7 @@ public class Controller {
     private synchronized void addToEntryList(DownloadEntry entry){
         System.out.println("Adding to entry list");
         entries.add(entry);
-        Future future = executorService.submit(entry);
+        executorService.submit(entry);
         System.out.println("Submtitted");
 //        futures.add(future);
 //        System.out.println("Added to future list");

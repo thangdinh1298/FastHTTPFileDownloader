@@ -34,6 +34,10 @@ public class Daemon {
         server.createContext("/resume", new resumeHandler());
         server.createContext("/delete", new deleteHandler());
         server.setExecutor(Executors.newSingleThreadExecutor()); // creates a default executor
+
+//        Thread tdownloadspeed = new Thread(Controller.getDownloadSpeed());
+//        Thread tsocketserver = new Thread(Controller.getsServer());
+
         server.start();
     }
 

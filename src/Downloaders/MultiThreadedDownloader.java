@@ -2,6 +2,7 @@ package Downloaders;
 
 import Controller.Controller;
 import Util.Configs;
+import Util.FileManager;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
@@ -11,6 +12,7 @@ import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 public class MultiThreadedDownloader extends DownloadEntry{
     private static final long serialVersionUID = -7221155498655620062l;
@@ -19,26 +21,29 @@ public class MultiThreadedDownloader extends DownloadEntry{
         this.fileSize = fileSize;
         this.threadNum = Configs.THREAD_NUM;
         //todo: this is a temporay solution to fix NullPointerException when entries are loaded from files and futures are not initialized. For a sound solution, State should be implemented
-//        futures = new Future[this.threadNum];
+//        this.futures = new Future[this.threadNum];
+//        this.tasks = new DownloadThread[this.threadNum];
+//        this.downloadedBytes = 0L;
     }
 
     @Override
-    public void run() {
-        try {
-            this.download();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void resume() throws OperationNotSupportedException {
     }
 
-    private void download() throws IOException {
+    @Override
+    public void download() throws IOException {
         this.setState(State.DOWNLOADING);
-        if(this.futures == null){
+        if (this.futures == null){
             futures = new Future[this.threadNum];
+        }
+        if (this.tasks == null) {
+            this.tasks = new DownloadThread[this.threadNum];
         }
 
         long segmentSize = this.fileSize / this.threadNum;
-        long chunkStartByte = 0, startByte = 0, endByte = 0;
+        long chunkStartByte = 0;
+        long endByte = 0;
+        long startByte = 0;
         for(int i = 0; i < this.threadNum; i++){
             long bytesDownloaded =  new File(String.valueOf(Paths.get(this.downloadDir, this.fileName + i))).length();
 //            System.out.println("==============================THREAD " + i + "==================================");
@@ -46,16 +51,14 @@ public class MultiThreadedDownloader extends DownloadEntry{
             startByte = chunkStartByte + bytesDownloaded;
             endByte = chunkStartByte + segmentSize - 1;
             if (i == this.threadNum - 1) endByte = this.fileSize - 1;
-//            System.out.println(startByte + " " + chunkSize);
-//
-//            System.out.println("Now downloading from " + startByte + " to " + (startByte + chunkSize - 1));
-//
-//            System.out.println("================================================================");
+
+            System.out.println("thread :"+i+"  from  "+startByte + " --> "+endByte + " segment size :"+segmentSize);
 
             chunkStartByte += segmentSize;
             if (startByte >= endByte) continue;
 
-            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
+            this.tasks[i] = new DownloadThread(startByte, endByte, i);
+            this.futures[i] = Controller.getInstance().getExecutorService().submit(this.tasks[i]);
             System.out.println("Submitting task " + i);
 
         }
@@ -97,6 +100,8 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 }
                 os.flush();
                 is.close(); /* ?? */
+
+//                File.
             }
             System.out.println("File size is " + count);
             this.setState(State.COMPLETED);
@@ -107,6 +112,9 @@ public class MultiThreadedDownloader extends DownloadEntry{
             if (os != null) os.close();
             if (is != null) is.close();
         }
+        FileManager.delete(this);
     }
+
+
 
 }

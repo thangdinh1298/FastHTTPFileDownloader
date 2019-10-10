@@ -19,38 +19,18 @@ public class SingleThreadedDownloader extends DownloadEntry{
     }
 
     @Override
-    public void run() {
-        try {
-            this.download();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    @Override
-    public void pause() throws OperationNotSupportedException {
-        throw new OperationNotSupportedException("Pause is not available for single-threaded downloads");
-    }
-
-    @Override
-    public void resume() throws OperationNotSupportedException {
-        if (this.resumable == false){
-            throw new OperationNotSupportedException();
-        } else {
-            System.out.println("Attempting to resume");
-        }
-    }
-
-    @Override
     public String toString() {
         return "SingleThreaded downloader";
     }
 
-    private void download() throws IOException {
+    @Override
+    public void download() throws IOException {
         this.setState(State.DOWNLOADING);
         if(this.futures == null) {
             futures = new Future[this.threadNum];
+        }
+        if (this.tasks == null) {
+            this.tasks = new DownloadThread[this.threadNum];
         }
         if (this.resumable == true){
             long bytesDownloaded = new File(this.getAbsolutePath()).length();
@@ -74,6 +54,13 @@ public class SingleThreadedDownloader extends DownloadEntry{
             e.printStackTrace();
             return;
         }
+        if (this.resumable == true){
+            long bytesDownloaded = new File(this.getAbsolutePath()).length();
+            this.tasks[0] = new DownloadThread(bytesDownloaded);
+        } else{
+            this.tasks[0] = new DownloadThread(0);
+        }
+
     }
 
 }
