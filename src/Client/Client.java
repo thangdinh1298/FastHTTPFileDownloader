@@ -6,6 +6,7 @@ import Util.Window;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -65,6 +66,8 @@ public class Client {
             String temp = "";
             String str;
 
+            Window.clear();
+
             while(true){
                 if(timeout <= 0){
                     break;
@@ -75,10 +78,13 @@ public class Client {
                     continue;
                 }
 
-                Window.clear();
+                Window.gotoxy(0, 0);
+
+                Arrays.fill(buff, (byte) 0);
 
                 is.read(buff);
-                str = new String(buff).replaceAll("\\s+$", "");
+                str = new String(buff);//.replaceAll("\\s+$", "");
+                str = String.valueOf(str.toCharArray(), 0, str.lastIndexOf('\n'));
                 System.out.println(str);
                 if(str.equals(temp))
                     timeout--;
