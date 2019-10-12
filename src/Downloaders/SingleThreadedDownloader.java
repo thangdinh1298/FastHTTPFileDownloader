@@ -1,17 +1,20 @@
 package Downloaders;
 
+import Controller.Controller;
+
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
-public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
-    private transient Thread thisThread;
+public class SingleThreadedDownloader extends DownloadEntry{
 
     //todo: close streams!!!! by handling error inside download function
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
         super(url, downloadDir, fileName, resumable);
-        thisThread = new Thread(this);
         this.threadNum = 1;
     }
 
@@ -24,24 +27,6 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
         }
     }
 
-    @Override
-    public void initDownload() {
-        thisThread.start();
-    }
-
-    @Override
-    public void pause() throws OperationNotSupportedException {
-        throw new OperationNotSupportedException("Pause is not available for single-threaded downloads");
-    }
-
-    @Override
-    public void resume() throws OperationNotSupportedException {
-        if (this.resumable == false){
-            throw new OperationNotSupportedException();
-        } else {
-            System.out.println("Attempting to resume");
-        }
-    }
 
     @Override
     public String toString() {
@@ -49,32 +34,40 @@ public class SingleThreadedDownloader extends DownloadEntry implements Runnable{
     }
 
     private void download() throws IOException {
-        HttpURLConnection conn = null;
-        InputStream is = null;
-        OutputStream os = null;
+        this.setState(State.DOWNLOADING);
+        if(this.futures == null) {
+            futures = new Future[this.threadNum];
+        }
+        if (this.tasks == null) {
+            this.tasks = new DownloadThread[this.threadNum];
+        }
+        if (this.resumable == true){
+            long bytesDownloaded = new File(this.getAbsolutePath()).length();
+            this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(bytesDownloaded));
+        } else {
+            this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(0));
+        }
+
+
         try {
-            conn = (HttpURLConnection) downloadLink.openConnection();
-            conn.setRequestMethod("GET");
-            conn.setRequestProperty( "charset", "utf-8");
-            conn.setRequestProperty("Content-Language", "en-US");
-            conn.connect();
-
-            is = conn.getInputStream();
-
-            os = new BufferedOutputStream(new FileOutputStream(getAbsolutePath()));
-            int c;
-            long count = 0;
-            while ((c = is.read()) != -1){
-                count++;
-                os.write(c);
-            }
-            System.out.println(count);
-        } catch (IOException e) {
+            this.futures[0].get();
+            this.setState(State.COMPLETED);
+        } catch (InterruptedException e) {
+            this.setState(State.PAUSED);
+            this.futures[0].cancel(true);
             e.printStackTrace();
-        } finally {
-            is.close();
-            os.close();
-            conn.disconnect();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (CancellationException e) {
+            this.setState(State.PAUSED);
+            e.printStackTrace();
+            return;
+        }
+        if (this.resumable == true){
+            long bytesDownloaded = new File(this.getAbsolutePath()).length();
+            this.tasks[0] = new DownloadThread(bytesDownloaded);
+        } else{
+            this.tasks[0] = new DownloadThread(0);
         }
     }
 
