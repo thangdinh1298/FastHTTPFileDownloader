@@ -3,6 +3,8 @@ package Daemon;
 import Controller.Controller;
 import Downloaders.DownloadEntry;
 import Downloaders.DownloadManager;
+import Util.DownloadSpeed;
+import Util.SServer;
 import Util.Utils;
 //import Util.ThreadPool;
 import com.sun.net.httpserver.HttpExchange;
@@ -25,7 +27,14 @@ public class Daemon {
     public Daemon() throws IOException {
 //        Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
 //        ThreadPool.getInstance();
-        DownloadManager.getInstance();
+        DownloadManager dm = DownloadManager.getInstance();
+
+        DownloadSpeed ds = new DownloadSpeed(dm.getEntries());
+        Thread tds = new Thread(ds);
+        tds.start();
+
+        Thread tss = new Thread(new SServer(ds));
+        tss.start();
 
         //try different ports
         InetAddress localHost = InetAddress.getLoopbackAddress();
