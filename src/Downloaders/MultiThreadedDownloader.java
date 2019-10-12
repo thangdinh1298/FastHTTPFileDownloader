@@ -55,7 +55,8 @@ public class MultiThreadedDownloader extends DownloadEntry{
             chunkStartByte += segmentSize;
             if (startByte >= endByte) continue;
 
-            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
+//            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
+            futures[i] = DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
             System.out.println("Submitting task " + i);
 
         }

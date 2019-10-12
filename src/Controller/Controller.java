@@ -1,5 +1,6 @@
 package Controller;
 
+import Downloaders.DownloadManager;
 import Downloaders.DownloaderFactory;
 import Downloaders.DownloadEntry;
 import Util.BackupManager;
@@ -12,36 +13,18 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class Controller {
-    private static ExecutorService executorService;
     private static BackupManager backupManager;
-    private static ArrayList<DownloadEntry> entries;
     private static Controller controller = null;
 
-    private Controller() {
-    }
-
-    public static Controller getInstance() {
-        if (controller == null) {
-            controller = new Controller();
-            backupManager = new BackupManager();
-            executorService = Executors.newFixedThreadPool(Configs.THREAD_POOL_SIZE);
-            //initialize entries list
-            try {
-                entries = Util.EntryWriter.readFromFile(Configs.history);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return controller;
-    }
 
     //todo: handle malformed url from the main function
-    public void addDownload(URL url, String fileName, String downloadDir) {
+    public static void addDownload(URL url, String fileName, String downloadDir) {
         try{
             boolean resumable = pollForRangeSupport(url);
             Long fileSize = pollForFileSize(url);
@@ -51,40 +34,42 @@ public class Controller {
             DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                     fileSize, url, downloadDir, fileName);
             if (de != null){
-                Controller.getInstance().addToEntryList(de);
+//                Controller.getInstance().addToEntryList(de);
+                DownloadManager.getInstance().addDownload(de);
             }
+            //todo: if de == null, throw error ?
 
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    public void deleteDownload(int index) throws IndexOutOfBoundsException {
-        DownloadEntry de = Controller.getInstance().getEntryAt(index);
-        try {
-            de.pause();
-        } catch (OperationNotSupportedException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Exception");
+    public static void deleteDownload(int index) throws IndexOutOfBoundsException, ExecutionException, InterruptedException {
+//        DownloadEntry de = DownloadManager.getInstance().getEntryAt(index);
+//        try {
+//            de.pause();
+//        } catch (OperationNotSupportedException e) {
+////            e.printStackTrace();
+//        }
         //todo: add logic: delete all segments, if merging then somehow delete the merging file
-        Controller.getInstance().removeAt(index);
+//        Controller.getInstance().removeAt(index);
+        DownloadManager.getInstance().deleteDownload(index);
     }
 
-    public void pauseDownload(int index) throws OperationNotSupportedException {
-
-        DownloadEntry de = Controller.getInstance().getEntryAt(index);
-
-        de.pause();
+    public static void pauseDownload(int index) throws IndexOutOfBoundsException, ExecutionException, InterruptedException {
+//        DownloadEntry de = DownloadManager.getInstance().getEntryAt(index);
+//        de.pause();
+        DownloadManager.getInstance().pauseDownload(index);
+    }
+    //todo:warn user that u can't resume some downloads
+    public static void resumeDownload(int index) throws IndexOutOfBoundsException {
+//        DownloadEntry de = Controller.getInstance().getEntryAt(index);
+////        futures.set(index, executorService.submit(de));
+//        executorService.submit(de);
+        DownloadManager.getInstance().resumeDownload(index);
     }
 
-    public void resumeDownload(int index) throws OperationNotSupportedException {
-        DownloadEntry de = Controller.getInstance().getEntryAt(index);
-//        futures.set(index, executorService.submit(de));
-        executorService.submit(de);
-    }
-
-    private boolean pollForRangeSupport(URL url) throws IOException {
+    private static boolean pollForRangeSupport(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -102,11 +87,7 @@ public class Controller {
         return false;
     }
 
-    public static ExecutorService getExecutorService() {
-        return executorService;
-    }
-
-    private Long pollForFileSize(URL url) throws IOException {
+    private static Long pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty( "charset", "utf-8");
@@ -129,35 +110,35 @@ public class Controller {
         return -1l;
     }
 
-    public void backup (){
-        BackupManager.backup(entries);
-    }
+//    public void backup (){
+//        BackupManager.backup(entries);
+//    }
 
-    private synchronized void updateAt(int index, DownloadEntry entry){
-        DownloadEntry oldEntry = entries.get(index);
-        oldEntry = entry;
-    }
+//    private synchronized void updateAt(int index, DownloadEntry entry){
+//        DownloadEntry oldEntry = entries.get(index);
+//        oldEntry = entry;
+//    }
+//
+//    private synchronized void addToEntryList(DownloadEntry entry){
+//        entries.add(entry);
+//        Future future = executorService.submit(entry);
+//
+//        backup();
+//    }
+//
+//    private synchronized void removeAt(int index) throws IndexOutOfBoundsException{
+//        entries.remove(index);
+//
+//        backup();
+//    }
+//
+//    public DownloadEntry getEntryAt(int idx) throws IndexOutOfBoundsException{
+//        return entries.get(idx);
+//    }
 
-    private synchronized void addToEntryList(DownloadEntry entry){
-        entries.add(entry);
-        Future future = executorService.submit(entry);
-
-        backup();
-    }
-
-    private synchronized void removeAt(int index) throws IndexOutOfBoundsException{
-        entries.remove(index);
-
-        backup();
-    }
-
-    public DownloadEntry getEntryAt(int idx) throws IndexOutOfBoundsException{
-        return entries.get(idx);
-    }
-
-    public ArrayList<DownloadEntry> getEntries(){
-        return entries;
-    }
+//    public ArrayList<DownloadEntry> getEntries(){
+//        return entries;
+//    }
 
     public static void main(String[] args) {
         try {

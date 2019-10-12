@@ -15,8 +15,19 @@ public class EntryWriter {
         outputStream.close();
     }
 
-    public static void writeAllToFile(String fileName, ArrayList<DownloadEntry> entries) throws IOException{
-        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
+    public static void writeAllHistory(ArrayList<DownloadEntry> entries) throws IOException{
+        File history = new File(Configs.history);
+        //check if file exists, if not, create it.
+        if (!history.exists()){
+            boolean ok = history.createNewFile();
+            //if file could not be created, return immediately
+            if (ok != true) {
+                System.out.println("Could not create new file to write history to");
+                return;
+            }
+        }
+
+        ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(history));
         for (DownloadEntry entry: entries){
             outputStream.writeObject(entry);
         }
@@ -24,23 +35,26 @@ public class EntryWriter {
         outputStream.close();
     }
 
-    public static ArrayList<DownloadEntry> readFromFile(String fileName) throws IOException {
+    public static ArrayList<DownloadEntry> readHistory(){
         ObjectInputStream inputStream = null;
         DownloadEntry entry;
         ArrayList<DownloadEntry> entries = new ArrayList<>();
-        File history = new File(Configs.history);
-        if (!history.exists()) {
-            history.createNewFile();
-        }
         try {
+            // if history file does not exist yet return empty arrayList
+            File history = new File(Configs.history);
+            if (!history.exists()) {
+                return entries;
+            }
+
             inputStream =  new ObjectInputStream(new FileInputStream(history));
             while (true) {
+                //read entry
                 entry = (DownloadEntry) inputStream.readObject();
                 System.out.println("Entry is: " + entry);
-
+                //Parse entry
                 DownloadEntry de = DownloaderFactory.getDownloadEntry(entry.isResumable(),
                         entry.getFileSize(), entry.getDownloadLink(), entry.getDownloadDir(), entry.getFileName());
-
+                // If parsing was successful, adjust state appropriately and add to entrty list
                 if (de != null){
                     if (entry.getState() == DownloadEntry.State.DOWNLOADING){
                         de.setState(DownloadEntry.State.PAUSED);
@@ -56,9 +70,14 @@ public class EntryWriter {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
             e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         } finally {
-            if (inputStream != null )
+            if (inputStream != null ) try {
                 inputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         System.out.println(entries.size());
         return entries;

@@ -48,7 +48,7 @@ public class DownloadEntry implements Serializable, Runnable {
 
     public void setState(State state) {
         this.state = state;
-        Controller.getInstance().backup();
+        /*Controller.getInstance().backup();*/
     }
 
     public Long getFileSize() {
@@ -83,11 +83,8 @@ public class DownloadEntry implements Serializable, Runnable {
         return fileName;
     }
 
-    public void resume() throws OperationNotSupportedException {
 
-    }
-
-    public void pause() throws OperationNotSupportedException {
+    public void pause() throws InterruptedException, ExecutionException{
         synchronized (this){
             for(Future f: this.futures){
                 if (f != null && !f.isCancelled() && !f.isDone()) f.cancel(true);
@@ -100,10 +97,9 @@ public class DownloadEntry implements Serializable, Runnable {
                 if (this.futures[i] != null) this.futures[i].get();
 
             } catch (InterruptedException e) {
-//                System.out.println("Job cancelled mid execution");
-                e.printStackTrace();
+                throw e;
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                throw e;
             } catch (CancellationException e){
                 System.out.println("Job cancelled");
 //                e.printStackTrace();
