@@ -124,7 +124,7 @@ public class Client {
                 index = args[1];
                 client.deleteDownload(index);
                 break;
-            case "getDownloadSpeed":
+            case "getdownloadspeed":
                 client.getDownloadSpeed();
                 break;
             default:

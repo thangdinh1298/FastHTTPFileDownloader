@@ -19,7 +19,7 @@ public class DownloadEntry implements Serializable, Runnable {
     protected long fileSize;
     protected int threadNum;
     protected boolean resumable;
-    protected State state;
+    protected volatile State state;
     protected transient Future[] futures;
     protected transient DownloadThread[] tasks;
 

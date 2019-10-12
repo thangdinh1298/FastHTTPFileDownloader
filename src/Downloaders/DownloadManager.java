@@ -91,10 +91,10 @@ public class DownloadManager {
     }
 
     public ArrayList<DownloadEntry> getEntries(){
-        ArrayList<DownloadEntry> clone = new ArrayList<>();
-        clone.addAll(entries);
-        return clone;
-//        return entries;
+//        ArrayList<DownloadEntry> clone = new ArrayList<>();
+//        clone.addAll(entries);
+//        return clone;
+        return entries;
     }
     private Long pollForFileSize(URL url) throws IOException {
         HttpURLConnection conn =  (HttpURLConnection)url.openConnection();

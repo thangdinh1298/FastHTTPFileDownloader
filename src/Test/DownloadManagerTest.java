@@ -72,7 +72,7 @@ public class DownloadManagerTest {
         initDownload();
         DownloadEntry de = DownloadManager.getInstance().getEntries().get(0);
         while(de.getState() != DownloadEntry.State.COMPLETED){
-            System.out.println("state is: " + de.getState());
+
         }
 
         try {
