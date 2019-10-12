@@ -36,6 +36,9 @@ public class MultiThreadedDownloader extends DownloadEntry{
         if(this.futures == null){
             futures = new Future[this.threadNum];
         }
+        if (this.tasks == null) {
+            this.tasks = new DownloadThread[this.threadNum];
+        }
 
         long segmentSize = this.fileSize / this.threadNum;
         long chunkStartByte = 0, startByte = 0, endByte = 0;
@@ -55,8 +58,8 @@ public class MultiThreadedDownloader extends DownloadEntry{
             chunkStartByte += segmentSize;
             if (startByte >= endByte) continue;
 
-//            futures[i] = Controller.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
-            futures[i] = DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(startByte, endByte, i));
+            this.tasks[i] = new DownloadThread(startByte, endByte, bytesDownloaded, i);
+            this.futures[i] = DownloadManager.getInstance().getExecutorService().submit(this.tasks[i]);
             System.out.println("Submitting task " + i);
 
         }

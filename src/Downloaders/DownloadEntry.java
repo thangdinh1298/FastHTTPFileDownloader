@@ -21,6 +21,7 @@ public class DownloadEntry implements Serializable, Runnable {
     protected boolean resumable;
     protected State state;
     protected transient Future[] futures;
+    protected transient DownloadThread[] tasks;
 
     public DownloadEntry(URL downloadLink, String downloadDir, String fileName,
                          boolean resumable) {
@@ -28,9 +29,12 @@ public class DownloadEntry implements Serializable, Runnable {
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
+        this.state = State.WAITING;
     }
 
     public enum State {
+        WAITING,
+
         PAUSED,
 
         DOWNLOADING,
@@ -107,6 +111,17 @@ public class DownloadEntry implements Serializable, Runnable {
         }
     }
 
+    public long getNumberOfDownloadedBytes(){
+        if(this.tasks == null)
+            return 0l;
+        Long downloadedBytes = 0L;
+        for(int i = 0; i < this.futures.length; ++i){
+            if(this.tasks[i] != null)
+                downloadedBytes += this.tasks[i].getCount();
+        }
+        return downloadedBytes;
+    }
+
     @Override
     public String toString() {
         return String.format("%s\t%s", this.getAbsolutePath(), this.getState());
@@ -125,16 +140,26 @@ public class DownloadEntry implements Serializable, Runnable {
         private long startByte;
         private long endByte; //num bytes to download including the start byte
         private int threadID;
+        private long count;
 
         public DownloadThread(long startByte, long endByte, int threadID) {
             this.startByte = startByte;
             this.endByte = endByte;
             this.threadID = threadID;
+            this.count = 0;
+        }
+
+        public DownloadThread(long startByte, long endByte, long bytesDownloaded, int threadID) {
+            this.endByte = endByte;
+            this.startByte = startByte;
+            this.threadID = threadID;
+            this.count = bytesDownloaded;
         }
 
         public DownloadThread(long startByte){
             this.startByte = startByte;
             this.endByte = -1;
+            this.count = 0;
         }
 
         /*
@@ -164,9 +189,11 @@ public class DownloadEntry implements Serializable, Runnable {
 
                 os = new BufferedOutputStream(new FileOutputStream(String.valueOf(Paths.get(downloadDir, fileName + this.threadID)), true));
                 int c;
-                long count = 0;
+
                 while((c = is.read()) != -1 && !Thread.interrupted()){
-                    count++;
+                    synchronized (this) {
+                        count++;
+                    }
                     os.write(c);
                 }
                 System.out.println("Thread " + this.threadID + " downloaded "  + count + " bytes");
@@ -192,6 +219,9 @@ public class DownloadEntry implements Serializable, Runnable {
                     }
                 }
             }
+        }
+        public long getCount(){
+            return this.count;
         }
     }
 }

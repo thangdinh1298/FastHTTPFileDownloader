@@ -38,6 +38,9 @@ public class SingleThreadedDownloader extends DownloadEntry{
         if(this.futures == null) {
             futures = new Future[this.threadNum];
         }
+        if (this.tasks == null) {
+            this.tasks = new DownloadThread[this.threadNum];
+        }
         if (this.resumable == true){
             long bytesDownloaded = new File(this.getAbsolutePath()).length();
             this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(bytesDownloaded));
@@ -59,6 +62,12 @@ public class SingleThreadedDownloader extends DownloadEntry{
             this.setState(State.PAUSED);
             e.printStackTrace();
             return;
+        }
+        if (this.resumable == true){
+            long bytesDownloaded = new File(this.getAbsolutePath()).length();
+            this.tasks[0] = new DownloadThread(bytesDownloaded);
+        } else{
+            this.tasks[0] = new DownloadThread(0);
         }
     }
 

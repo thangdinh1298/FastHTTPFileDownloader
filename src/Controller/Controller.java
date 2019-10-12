@@ -1,17 +1,17 @@
 package Controller;
 
 import Downloaders.DownloadManager;
+import Util.DownloadSpeed;
 import Util.EntryWriter;
+import Util.SServer;
 
 import java.io.IOException;
 
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.ExecutionException;
 
 
 public class Controller {
-
     //todo: handle malformed url from the main function
     public static void addDownload(URL url, String fileName, String downloadDir) throws IOException {
         DownloadManager.getInstance().addDownload(url,fileName, downloadDir);
@@ -29,9 +29,6 @@ public class Controller {
     public static void resumeDownload(int index) throws IndexOutOfBoundsException {
         DownloadManager.getInstance().resumeDownload(index);
     }
-
-
-
 
 
     public void backup (){
