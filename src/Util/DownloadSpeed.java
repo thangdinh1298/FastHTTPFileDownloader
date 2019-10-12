@@ -79,7 +79,7 @@ public class DownloadSpeed implements Runnable{
 //                            downloadEntry.getFileName(), speed,
 //                            progress_bar[(int) temp / 10], temp,
 //                            downloadEntry.getState());
-                    this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s    ",
+                    this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s     ",
                             downloadEntry.getFileName(), speed/1024,
                             progress_bar[(int) temp / 10], temp,
                             downloadEntry.getState());
