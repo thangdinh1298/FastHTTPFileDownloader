@@ -27,6 +27,7 @@ public class DownloadEntry implements Serializable, Runnable {
         this.downloadDir = downloadDir;
         this.fileName = fileName;
         this.resumable = resumable;
+        this.state = State.WAITING;
     }
 
     @Override
@@ -39,6 +40,8 @@ public class DownloadEntry implements Serializable, Runnable {
     }
 
     public enum State {
+        WAITING,
+
         PAUSED,
 
         DOWNLOADING,
@@ -132,7 +135,7 @@ public class DownloadEntry implements Serializable, Runnable {
             return 0l;
         Long downloadedBytes = 0L;
         for(int i = 0; i < this.futures.length; ++i){
-            if(this.tasks != null)
+            if(this.tasks[i] != null)
                 downloadedBytes += this.tasks[i].getCount();
         }
         return downloadedBytes;
@@ -161,6 +164,13 @@ public class DownloadEntry implements Serializable, Runnable {
             this.startByte = startByte;
             this.threadID = threadID;
             this.count = 0;
+        }
+
+        public DownloadThread(long startByte, long endByte, long bytesDownloaded, int threadID) {
+            this.endByte = endByte;
+            this.startByte = startByte;
+            this.threadID = threadID;
+            this.count = bytesDownloaded;
         }
 
         public DownloadThread(long startByte) {

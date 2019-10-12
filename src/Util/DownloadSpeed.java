@@ -36,9 +36,8 @@ public class DownloadSpeed implements Runnable{
         };
 
         int i = 0;
-
+        DownloadEntry downloadEntry;
         while(true){
-//            System.out.println("HI");
             if(this.entries.size() == 0){
                 try {
                     TimeUnit.MILLISECONDS.sleep(1000);
@@ -54,8 +53,9 @@ public class DownloadSpeed implements Runnable{
                 start_time = new long[this.entries.size()];
                 this.downloadInfos = new String[this.entries.size()];
             }
-            i = 0;
-            for(DownloadEntry downloadEntry : this.entries){
+
+            for(i = 0; i < byte_num.length; ++i){
+                downloadEntry = this.entries.get(i);
                 if(downloadEntry != null){
                     start_time[i] = System.nanoTime();
                     byte_num[i] = downloadEntry.getNumberOfDownloadedBytes();
@@ -68,22 +68,26 @@ public class DownloadSpeed implements Runnable{
                 e.printStackTrace();
             }
 
-            i = 0;
-            for(DownloadEntry downloadEntry : this.entries){
+            for(i = 0; i < byte_num.length; i++){
+                downloadEntry = this.entries.get(i);
                 if(downloadEntry != null) {
                     temp = downloadEntry.getNumberOfDownloadedBytes();
                     speed = (temp - byte_num[i]) * 1000000000 /
                             (float) (System.nanoTime() - start_time[i]);
                     temp = temp * 100 / downloadEntry.getFileSize();
-                    this.downloadInfos[i] = String.format("%20s20.2%f %s %4d%% %s",
-                            downloadEntry.getFileName(), speed,
-                            progress_bar[(int) temp / 10], temp, downloadEntry.getState());
+//                    this.downloadInfos[i] = String.format("%20s20.2%f %s %4d%% %s",
+//                            downloadEntry.getFileName(), speed,
+//                            progress_bar[(int) temp / 10], temp,
+//                            downloadEntry.getState());
+                    this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s",
+                            downloadEntry.getFileName(), speed/1024,
+                            progress_bar[(int) temp / 10], temp,
+                            downloadEntry.getState());
                 }
                 else{
-                    this.downloadInfos[i] = "";
+                    this.downloadInfos[i] = "None";
                 }
             }
-
         }
     }
 
@@ -93,7 +97,7 @@ public class DownloadSpeed implements Runnable{
         if(this.downloadInfos == null || this.downloadInfos.length == 0){
             return "";
         }
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder("");
         int i = 0;
         for(String s : this.downloadInfos){
             builder.append(s).append("\n");

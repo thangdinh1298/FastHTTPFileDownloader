@@ -1,6 +1,7 @@
 package Client;
 
 import Util.Utils;
+import Util.Window;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,22 +64,26 @@ public class Client {
             int timeout = 5;
             String temp = "";
             String str;
+
             while(true){
                 if(timeout <= 0){
                     break;
                 }
                 if(is.available() == 0){
-                    TimeUnit.MILLISECONDS.sleep(1000);
+                    TimeUnit.MILLISECONDS.sleep(900);
                     timeout--;
                     continue;
                 }
-                timeout = 5;
-                this.clear();
+
+                Window.clear();
+
                 is.read(buff);
-                str = new String(buff).trim();
+                str = new String(buff).replaceAll("\\s+$", "");
                 System.out.println(str);
                 if(str.equals(temp))
                     timeout--;
+                else
+                    timeout = 5;
                 temp = str;
             }
         } catch (IOException e) {
@@ -87,11 +92,6 @@ public class Client {
             e.printStackTrace();
         }
 
-    }
-
-    public void clear(){
-        System.out.print("\033[H\033[2J");
-        System.out.flush();
     }
 
     public static void main(String[] args) {
