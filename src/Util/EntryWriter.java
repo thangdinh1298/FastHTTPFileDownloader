@@ -17,14 +17,14 @@ public class EntryWriter {
 
     public static void writeAllHistory(ArrayList<DownloadEntry> entries) throws IOException{
         File history = new File(Configs.history);
-        //check if file exists, if not, create it.
+        //check if file exists, if not, attempt to create and write to it.
         if (!history.exists()){
-            boolean ok = history.createNewFile();
-            //if file could not be created, return immediately
-            if (ok != true) {
-                System.out.println("Could not create new file to write history to");
+            try{
+                history.createNewFile();
+            } catch (IOException e){ //returns immediately if the file could not be created
                 return;
             }
+
         }
 
         ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(history));

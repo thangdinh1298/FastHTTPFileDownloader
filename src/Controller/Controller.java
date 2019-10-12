@@ -1,118 +1,46 @@
 package Controller;
 
 import Downloaders.DownloadManager;
-import Downloaders.DownloaderFactory;
-import Downloaders.DownloadEntry;
-import Util.BackupManager;
-import Util.Configs;
+import Util.EntryWriter;
 
-import javax.naming.OperationNotSupportedException;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+
 
 public class Controller {
-    private static BackupManager backupManager;
-    private static Controller controller = null;
-
 
     //todo: handle malformed url from the main function
-    public static void addDownload(URL url, String fileName, String downloadDir) {
-        try{
-            boolean resumable = pollForRangeSupport(url);
-            Long fileSize = pollForFileSize(url);
-
-            System.out.println(resumable + " "  + fileSize);
-
-            DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
-                    fileSize, url, downloadDir, fileName);
-            if (de != null){
-//                Controller.getInstance().addToEntryList(de);
-                DownloadManager.getInstance().addDownload(de);
-            }
-            //todo: if de == null, throw error ?
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public static void addDownload(URL url, String fileName, String downloadDir) throws IOException {
+        DownloadManager.getInstance().addDownload(url,fileName, downloadDir);
     }
 
     public static void deleteDownload(int index) throws IndexOutOfBoundsException, ExecutionException, InterruptedException {
-//        DownloadEntry de = DownloadManager.getInstance().getEntryAt(index);
-//        try {
-//            de.pause();
-//        } catch (OperationNotSupportedException e) {
-////            e.printStackTrace();
-//        }
         //todo: add logic: delete all segments, if merging then somehow delete the merging file
-//        Controller.getInstance().removeAt(index);
         DownloadManager.getInstance().deleteDownload(index);
     }
 
     public static void pauseDownload(int index) throws IndexOutOfBoundsException, ExecutionException, InterruptedException {
-//        DownloadEntry de = DownloadManager.getInstance().getEntryAt(index);
-//        de.pause();
         DownloadManager.getInstance().pauseDownload(index);
     }
     //todo:warn user that u can't resume some downloads
     public static void resumeDownload(int index) throws IndexOutOfBoundsException {
-//        DownloadEntry de = Controller.getInstance().getEntryAt(index);
-////        futures.set(index, executorService.submit(de));
-//        executorService.submit(de);
         DownloadManager.getInstance().resumeDownload(index);
     }
 
-    private static boolean pollForRangeSupport(URL url) throws IOException {
-        HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty( "charset", "utf-8");
-        conn.setRequestProperty("Content-Language", "en-US");
-        conn.setRequestProperty("Range", "bytes=10-20");
-        conn.connect();
 
-        int status = conn.getResponseCode();
-        System.out.println("Status code is: "+ status);
 
-        if (status == HttpURLConnection.HTTP_PARTIAL) {
-            return true;
+
+
+    public void backup (){
+        try {
+            EntryWriter.writeAllHistory(DownloadManager.getInstance().getEntries());
+        } catch (IOException e) {
+            System.out.println("Could not back up to file: " + e.getMessage());
         }
-
-        return false;
     }
-
-    private static Long pollForFileSize(URL url) throws IOException {
-        HttpURLConnection conn =  (HttpURLConnection)url.openConnection();
-        conn.setRequestMethod("GET");
-        conn.setRequestProperty( "charset", "utf-8");
-        conn.setRequestProperty("Content-Language", "en-US");
-        conn.connect();
-
-        int status = conn.getResponseCode();
-
-        if (status == HttpURLConnection.HTTP_OK ){
-            if (conn.getHeaderFields().containsKey("Content-Length")) {
-                try {
-                    Long size = Long.parseLong(conn.getHeaderFields().get("Content-Length").get(0));
-                    return size;
-                } catch (NumberFormatException e) {
-                    e.printStackTrace();
-                    return -1l;
-                }
-            }
-        }
-        return -1l;
-    }
-
-//    public void backup (){
-//        BackupManager.backup(entries);
-//    }
 
 //    private synchronized void updateAt(int index, DownloadEntry entry){
 //        DownloadEntry oldEntry = entries.get(index);
@@ -140,13 +68,13 @@ public class Controller {
 //        return entries;
 //    }
 
-    public static void main(String[] args) {
-        try {
-            Controller controller = new Controller();
-            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"),"test.pdf","downloadDir");
-
-        } catch (MalformedURLException e) {
-            System.out.println(e.getMessage());
-        }
-    }
+//    public static void main(String[] args) {
+//        try {
+//            Controller controller = new Controller();
+//            controller.addDownload( new URL("https://drive.google.com/uc?export=download&id=1Xqd8JzANoUTQi-QP4u6su1Hva5k7pX6k"),"test.pdf","downloadDir");
+//
+//        } catch (MalformedURLException e) {
+//            System.out.println(e.getMessage());
+//        }
+//    }
 }
