@@ -55,10 +55,15 @@ public class DownloadSpeed implements Runnable{
             }
 
             for(i = 0; i < byte_num.length; ++i){
-                downloadEntry = this.entries.get(i);
-                if(downloadEntry != null){
-                    start_time[i] = System.nanoTime();
-                    byte_num[i] = downloadEntry.getNumberOfDownloadedBytes();
+                try {
+                    downloadEntry = this.entries.get(i);
+
+                    if (downloadEntry != null) {
+                        start_time[i] = System.nanoTime();
+                        byte_num[i] = downloadEntry.getNumberOfDownloadedBytes();
+                    }
+                } catch (IndexOutOfBoundsException e){
+                    break;
                 }
             }
 
@@ -69,23 +74,27 @@ public class DownloadSpeed implements Runnable{
             }
 
             for(i = 0; i < byte_num.length; i++){
-                downloadEntry = this.entries.get(i);
-                if(downloadEntry != null) {
-                    temp = downloadEntry.getNumberOfDownloadedBytes();
-                    speed = (temp - byte_num[i]) * 1000000000 /
-                            (float) (System.nanoTime() - start_time[i]);
-                    temp = temp * 100 / downloadEntry.getFileSize();
+                try {
+                    downloadEntry = this.entries.get(i);
+                    if (downloadEntry != null) {
+                        temp = downloadEntry.getNumberOfDownloadedBytes();
+                        speed = (temp - byte_num[i]) * 1000000000 /
+                                (float) (System.nanoTime() - start_time[i]);
+                        temp = temp * 100 / downloadEntry.getFileSize();
 //                    this.downloadInfos[i] = String.format("%20s20.2%f %s %4d%% %s",
 //                            downloadEntry.getFileName(), speed,
 //                            progress_bar[(int) temp / 10], temp,
 //                            downloadEntry.getState());
-                    this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s    ",
-                            downloadEntry.getFileName(), speed/1024,
-                            progress_bar[(int) temp / 10], temp,
-                            downloadEntry.getState());
+                        this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s      ",
+                                downloadEntry.getFileName(), speed / 1024,
+                                progress_bar[(int) temp / 10], temp,
+                                downloadEntry.getState());
+                    } else {
+                        this.downloadInfos[i] = "None";
+                    }
                 }
-                else{
-                    this.downloadInfos[i] = "None";
+                catch (IndexOutOfBoundsException e){
+                    break;
                 }
             }
         }
