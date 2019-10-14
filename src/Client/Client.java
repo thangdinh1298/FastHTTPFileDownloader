@@ -78,7 +78,8 @@ public class Client {
                     continue;
                 }
 
-                Window.gotoxy(0, 0);
+//                Window.gotoxy(0, 0);
+                Window.clear();
 
                 Arrays.fill(buff, (byte) 0);
                 is.read(buff);
