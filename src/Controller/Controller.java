@@ -1,9 +1,7 @@
 package Controller;
 
 import Downloaders.DownloadManager;
-import Util.DownloadSpeed;
-import Util.EntryWriter;
-import Util.SServer;
+import Util.FileManager;
 
 import java.io.IOException;
 
@@ -33,7 +31,7 @@ public class Controller {
 
     public void backup (){
         try {
-            EntryWriter.writeAllHistory(DownloadManager.getInstance().getEntries());
+            FileManager.writeAllHistory(DownloadManager.getInstance().getEntries());
         } catch (IOException e) {
             System.out.println("Could not back up to file: " + e.getMessage());
         }

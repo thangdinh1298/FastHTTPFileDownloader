@@ -1,6 +1,7 @@
 package Downloaders;
 
 import Util.Configs;
+import Util.Utils;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -83,6 +84,7 @@ public class DownloadManager {
         } //remove the download even if the pausing fails???
         finally {
             entries.remove(index);
+            Util.FileManager.delete(de);
         }
     }
 

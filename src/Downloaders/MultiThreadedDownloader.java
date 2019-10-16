@@ -1,11 +1,11 @@
 package Downloaders;
 
-import Controller.Controller;
+//import Controller.Controller;
 import Util.Configs;
 
-import javax.naming.OperationNotSupportedException;
+//import javax.naming.OperationNotSupportedException;
 import java.io.*;
-import java.net.HttpURLConnection;
+//import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.concurrent.CancellationException;
@@ -101,6 +101,8 @@ public class MultiThreadedDownloader extends DownloadEntry{
                 }
                 os.flush();
                 is.close(); /* ?? */
+
+
             }
             System.out.println("File size is " + count);
             this.setState(State.COMPLETED);
@@ -110,7 +112,7 @@ public class MultiThreadedDownloader extends DownloadEntry{
         } finally{
             if (os != null) os.close();
             if (is != null) is.close();
+            Util.FileManager.delete(this);
         }
     }
-
 }

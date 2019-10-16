@@ -5,9 +5,10 @@ import Downloaders.DownloaderFactory;
 
 import javax.imageio.IIOException;
 import java.io.*;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
-public class EntryWriter {
+public class FileManager {
     public static void writeToFile(String fileName, DownloadEntry entry) throws IOException {
         ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(fileName));
         outputStream.writeObject(entry);
@@ -81,5 +82,21 @@ public class EntryWriter {
         }
         System.out.println(entries.size());
         return entries;
+    }
+
+    public static void delete(DownloadEntry entry){
+        if(entry.isResumable()) {
+            int i = 0;
+            while(i < entry.getThreadNum()){
+                if(new File(String.valueOf(Paths.get(entry.getDownloadDir(), entry.getFileName() + i))).delete()){
+                    System.out.printf("delete %s segment %d successfully!\n", entry.getFileName(), i);
+                }
+                else{
+                    System.out.printf("segment %d do not exist!!\n", i);
+                }
+                i++;
+            }
+        }
+
     }
 }

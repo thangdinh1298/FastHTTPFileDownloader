@@ -1,8 +1,8 @@
 package Downloaders;
 
-import Controller.Controller;
+//import Controller.Controller;
 
-import javax.naming.OperationNotSupportedException;
+//import javax.naming.OperationNotSupportedException;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
