@@ -36,66 +36,66 @@ public class DownloadSpeed implements Runnable{
         };
 
         int i = 0;
+        int index = 0;
         DownloadEntry downloadEntry;
         while(true){
+            try {
+                TimeUnit.MILLISECONDS.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             if(this.entries.size() == 0){
-                try {
-                    TimeUnit.MILLISECONDS.sleep(1000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 continue;
             }
             if(this.downloadInfos == null
                     || start_time == null
                     || this.downloadInfos.length != this.entries.size()){
+                System.out.println("resizing....");
                 byte_num = new long[this.entries.size()];
                 start_time = new long[this.entries.size()];
                 this.downloadInfos = new String[this.entries.size()];
             }
 
-            for(i = 0; i < byte_num.length; ++i){
-                try {
+            try {
+                for(i = 0; i < byte_num.length; ++i){
                     downloadEntry = this.entries.get(i);
 
                     if (downloadEntry != null) {
                         start_time[i] = System.nanoTime();
                         byte_num[i] = downloadEntry.getNumberOfDownloadedBytes();
                     }
-                } catch (IndexOutOfBoundsException e){
-                    break;
                 }
-            }
 
-            try {
-                TimeUnit.MILLISECONDS.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-
-            for(i = 0; i < byte_num.length; i++){
                 try {
+                    TimeUnit.MILLISECONDS.sleep(800);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+                for(i = 0; i < byte_num.length; i++){
                     downloadEntry = this.entries.get(i);
                     if (downloadEntry != null) {
                         temp = downloadEntry.getNumberOfDownloadedBytes();
                         speed = (temp - byte_num[i]) * 1000000000 /
                                 (float) (System.nanoTime() - start_time[i]);
                         temp = temp * 100 / downloadEntry.getFileSize();
-//                    this.downloadInfos[i] = String.format("%20s20.2%f %s %4d%% %s",
-//                            downloadEntry.getFileName(), speed,
-//                            progress_bar[(int) temp / 10], temp,
-//                            downloadEntry.getState());
-                        this.downloadInfos[i] = String.format("%20s %10.2f kB/s %s %4d%% %s      ",
-                                downloadEntry.getFileName(), speed / 1024,
-                                progress_bar[(int) temp / 10], temp,
+
+                        if(downloadEntry.getState() == DownloadEntry.State.COMPLETED) {
+                            temp = 100;
+                            speed = 0;
+                        }
+                        index = (int)temp/10;
+                        this.downloadInfos[i] = String.format("%3d %20s %10.2f kB/s  %11s  %4d%%  %11s",
+                                i, downloadEntry.getFileName(), speed / 1024,
+                                progress_bar[index], temp,
                                 downloadEntry.getState());
                     } else {
-                        this.downloadInfos[i] = "None";
+                        this.downloadInfos[i] = "";
                     }
+
                 }
-                catch (IndexOutOfBoundsException e){
-                    break;
-                }
+            } catch (IndexOutOfBoundsException e){
+                //do nothing
             }
         }
     }
@@ -106,10 +106,12 @@ public class DownloadSpeed implements Runnable{
         if(this.downloadInfos == null || this.downloadInfos.length == 0){
             return "";
         }
-        StringBuilder builder = new StringBuilder("");
+        StringBuilder builder = new StringBuilder(String.format("%3s %20s %10s kB/s  %12s  %5s  %11s\n",
+                "No.", "File name", "Speed", "Progress", "%", "Status"));
         int i = 0;
         for(String s : this.downloadInfos){
-            builder.append(s).append("\n");
+            if( s != null)
+                builder.append(s).append("\n");
         }
         return builder.toString();
     }

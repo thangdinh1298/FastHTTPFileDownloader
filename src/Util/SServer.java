@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.concurrent.TimeUnit;
 
 public class SServer implements Runnable{
@@ -24,11 +25,12 @@ public class SServer implements Runnable{
 
     @Override
     public void run() {
-        OutputStream os;
+        OutputStream os = null;
 //        System.out.println("hi");
+        Socket socket = null;
         while(true){
             try {
-                Socket socket = this.ss.accept();
+                socket = this.ss.accept();
                 System.out.println("connected!");
                 os = socket.getOutputStream();
                 while(!socket.isClosed()){
@@ -37,9 +39,18 @@ public class SServer implements Runnable{
                     TimeUnit.MILLISECONDS.sleep(1000);
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("Broken pipe1");
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println("InterruptException!");
+            } finally {
+                try {
+                    if (os != null)
+                        os.close();
+                    if (socket != null)
+                        socket.close();
+                } catch (IOException e){
+                    //do nothing
+                }
             }
         }
     }

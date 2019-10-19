@@ -76,15 +76,15 @@ public class DownloadManager {
         try{
             de.pause();
         }catch (InterruptedException e){
-            throw e;
+//            throw e;
         } catch (ExecutionException e){
-            throw e;
+//            throw e;
         } catch (CancellationException e) {
-            throw e;
+//            throw e;
         } //remove the download even if the pausing fails???
         finally {
-            entries.remove(index);
             Util.FileManager.delete(de);
+            entries.remove(index);
         }
     }
 

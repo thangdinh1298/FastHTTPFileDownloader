@@ -68,23 +68,29 @@ public class Client {
 
             Window.clear();
 
+            int last_index = 0;
             while(true){
                 if(timeout <= 0){
                     break;
                 }
+                TimeUnit.MILLISECONDS.sleep(900);
                 if(is.available() == 0){
-                    TimeUnit.MILLISECONDS.sleep(900);
                     timeout--;
                     continue;
                 }
 
-                Window.gotoxy(0, 0);
+                Window.clear();
 
                 Arrays.fill(buff, (byte) 0);
 
                 is.read(buff);
                 str = new String(buff);//.replaceAll("\\s+$", "");
-                str = String.valueOf(str.toCharArray(), 0, str.lastIndexOf('\n'));
+                last_index = str.lastIndexOf('\n');
+                if(last_index >= 0)
+                    str = String.valueOf(str.toCharArray(), 0, last_index);
+                else
+                    str = "";
+
                 System.out.println(str);
                 if(str.equals(temp))
                     timeout--;
@@ -93,9 +99,9 @@ public class Client {
                 temp = str;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("IOException!");
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            System.out.println("InterruptedException!");
         }
 
     }
