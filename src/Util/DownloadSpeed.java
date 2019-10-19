@@ -37,7 +37,10 @@ public class DownloadSpeed implements Runnable{
 
         int i = 0;
         int index = 0;
+        long byte_remaining = 0;
+        String time_left = "";
         DownloadEntry downloadEntry;
+
         while(true){
             try {
                 TimeUnit.MILLISECONDS.sleep(1000);
@@ -78,15 +81,25 @@ public class DownloadSpeed implements Runnable{
                         temp = downloadEntry.getNumberOfDownloadedBytes();
                         speed = (temp - byte_num[i]) * 1000000000 /
                                 (float) (System.nanoTime() - start_time[i]);
+
+                        byte_remaining = downloadEntry.getFileSize() - temp;
                         temp = temp * 100 / downloadEntry.getFileSize();
 
+                        if(speed > 0){
+                            time_left = TimeFormater.secondToHMS((long)(byte_remaining/speed));
+                        }
+                        if(downloadEntry.getState() == DownloadEntry.State.PAUSED){
+                            time_left = "INF";
+                        }
                         if(downloadEntry.getState() == DownloadEntry.State.COMPLETED) {
                             temp = 100;
                             speed = 0;
+                            time_left = "00:00:00";
                         }
+
                         index = (int)temp/10;
-                        this.downloadInfos[i] = String.format("%3d %20s %10.2f kB/s  %11s  %4d%%  %11s",
-                                i, downloadEntry.getFileName(), speed / 1024,
+                        this.downloadInfos[i] = String.format("%3d %20s %10.2f kB/s  %12s  %11s  %4d%%  %11s",
+                                i, downloadEntry.getFileName(), speed / 1024, time_left,
                                 progress_bar[index], temp,
                                 downloadEntry.getState());
                     } else {
@@ -106,8 +119,8 @@ public class DownloadSpeed implements Runnable{
         if(this.downloadInfos == null || this.downloadInfos.length == 0){
             return "";
         }
-        StringBuilder builder = new StringBuilder(String.format("%3s %20s %10s kB/s  %12s  %5s  %11s\n",
-                "No.", "File name", "Speed", "Progress", "%", "Status"));
+        StringBuilder builder = new StringBuilder(String.format("%3s %20s %10s kB/s  %12s  %12s  %5s  %11s\n",
+                "No.", "File name", "Speed", "Time left","Progress", "%", "Status"));
         int i = 0;
         for(String s : this.downloadInfos){
             if( s != null)
