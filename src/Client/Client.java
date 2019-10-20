@@ -5,6 +5,7 @@ import Util.Window;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -54,13 +55,17 @@ public class Client {
         Utils.doGet(endpoint, headers);
     }
 
-    public void getDownloadSpeed(){
-        System.out.println("here");
+    public void getDownloadSpeed(String str_index){
         String ip = "localhost";
         int port = 6969;
+
+//        int index = Integer.parseInt(str_index);
         try (Socket socket = new Socket(ip, port)){
             System.out.println("connected!!");
             byte[] buff = new byte[1024];
+            OutputStream os = socket.getOutputStream();
+            os.write(str_index.getBytes());
+
             InputStream is = socket.getInputStream();
             int timeout = 5;
             String temp = "";
@@ -137,7 +142,10 @@ public class Client {
                 client.deleteDownload(index);
                 break;
             case "getdownloadspeed":
-                client.getDownloadSpeed();
+                if(args.length < 2)
+                    client.getDownloadSpeed("-1");
+                else
+                    client.getDownloadSpeed(args[1]);
                 break;
             default:
                 System.out.println("Operation not supported");

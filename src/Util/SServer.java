@@ -1,6 +1,7 @@
 package Util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -26,16 +27,27 @@ public class SServer implements Runnable{
     @Override
     public void run() {
         OutputStream os = null;
+        InputStream is = null;
 //        System.out.println("hi");
         Socket socket = null;
+        int index = -1;
+        byte[] buff = new byte[4];
         while(true){
             try {
                 socket = this.ss.accept();
                 System.out.println("connected!");
                 os = socket.getOutputStream();
+                is = socket.getInputStream();
+                is.read(buff);
+                System.out.println("|new String(buff).trim()");
+                index = Integer.parseInt(new String(buff).trim());
                 while(!socket.isClosed()){
-                    if(downloadSpeed != null)
-                        os.write(downloadSpeed.toString().getBytes());
+                    if(downloadSpeed != null) {
+                        if(index != -1)
+                            os.write(downloadSpeed.toString().getBytes());
+                        else
+                            os.write(downloadSpeed.getDetailDownload(index).getBytes());
+                    }
                     TimeUnit.MILLISECONDS.sleep(1000);
                 }
             } catch (IOException e) {
