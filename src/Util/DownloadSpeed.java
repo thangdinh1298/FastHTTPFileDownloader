@@ -15,6 +15,9 @@ public class DownloadSpeed implements Runnable{
     }
 
     private String progress_bar(int length, int percent){
+        if(percent < 0)
+            return "";
+
         int count = percent*length/100;
         StringBuilder builder = new StringBuilder();
         builder.append("[");
@@ -55,6 +58,8 @@ public class DownloadSpeed implements Runnable{
     }
 
     private int calcPercent(long num1, long num2){
+        if(num2 < 0)
+            return -1;
         return (int)(num1*100/num2);
     }
 
@@ -103,7 +108,7 @@ public class DownloadSpeed implements Runnable{
         DownloadEntry entry;
         String time_left;
         long downloadedBytes;
-        while(i < downloadInfo.length){
+        while(i < downloadInfo.length) {
             entry = this.entries.get(i);
             downloadedBytes = entry.getNumberOfDownloadedBytes();
 
@@ -172,33 +177,21 @@ public class DownloadSpeed implements Runnable{
         if(index >= this.downloadInfo.length || index < 0)
             return "  ";
         DownloadEntry entry = this.entries.get(index);
-        long bytes_downloaded = entry.getNumberOfDownloadedBytes();
-        String time_left = "";
-        float speed = this.downloadSpeeds[index];
 
-        int percent = 0;
-        if(entry.getFileSize() != -1)
-            percent = (int)(bytes_downloaded*100/entry.getFileSize());
-        else
-            percent = -1;
-        if(entry.getState() == DownloadEntry.State.COMPLETED){
-            time_left = "00:00:00";
-        }
-        else if(entry.getState() == DownloadEntry.State.PAUSED
-                || entry.getState() == DownloadEntry.State.WAITING){
-            time_left = "INF";
-        }
-        else
-            time_left = TimeFormatter.secondToHMS((long)((entry.getFileSize()-bytes_downloaded)/speed));
+        long file_size = entry.getFileSize();
+        long bytes_downloaded = entry.getNumberOfDownloadedBytes();
+        float speed = this.downloadSpeeds[index];
+        int ratio = this.calcPercent(bytes_downloaded, entry.getFileSize());
+        String time_left = this.calcTimeLeft(speed, bytes_downloaded, file_size, entry.getState());
 
         StringBuilder builder = new StringBuilder("");
         builder.append("File name: ").append(entry.getFileName()).append("\n");
         builder.append("URL: ").append(entry.getDownloadLink()).append("\n\n");
 
-        if(percent != -1){
-            builder.append(this.progress_bar(20, percent)).append(percent).append(" %\n\n");
-        }
+        builder.append(this.progress_bar(20, ratio)).append((ratio >= 0)? ratio:"").append(" %\n\n");
+
         builder.append("File size :").append(entry.getFileSize()/1024).append(" kB\n");
+        builder.append("Number of thread:").append(entry.getThreadNum()).append("\n");
         builder.append("Downloaded : ").append(bytes_downloaded/1024).append(" kB\n");
         builder.append("Download Speed : ").append(speed/1024).append(" kB/s\n");
         builder.append("Time left : ").append(time_left).append("\n");
