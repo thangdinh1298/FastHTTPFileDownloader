@@ -70,6 +70,7 @@ public class DownloadManager {
 
     public synchronized void deleteDownload(int index) throws IndexOutOfBoundsException, InterruptedException, ExecutionException, CancellationException {
         if (index >= entries.size()) {
+            System.out.println(index);
             throw new IndexOutOfBoundsException();
         }
         DownloadEntry de = entries.get(index);
@@ -77,13 +78,13 @@ public class DownloadManager {
             de.pause();
         }catch (InterruptedException e){
             e.printStackTrace();
-            throw e;
+//            throw e;
         } catch (ExecutionException e){
             e.printStackTrace();
-            throw e;
+//            throw e;
         } catch (CancellationException e) {
             e.printStackTrace();
-            throw e;
+//            throw e;
         } //remove the download even if the pausing fails???
         finally {
             System.out.println("--------------------------------------------");

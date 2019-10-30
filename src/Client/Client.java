@@ -75,12 +75,12 @@ public class Client {
 
             int last_index = 0;
             while(true){
+                timeout--;
                 if(timeout <= 0){
                     break;
                 }
                 TimeUnit.MILLISECONDS.sleep(900);
                 if(is.available() == 0){
-                    timeout--;
                     continue;
                 }
 
@@ -97,9 +97,7 @@ public class Client {
                     str = "";
 
                 System.out.println(str);
-                if(str.equals(temp))
-                    timeout--;
-                else
+                if(!str.equals(temp))
                     timeout = 5;
                 temp = str;
             }

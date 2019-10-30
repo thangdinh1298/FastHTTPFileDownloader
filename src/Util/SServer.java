@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class SServer implements Runnable{
@@ -31,19 +32,21 @@ public class SServer implements Runnable{
 //        System.out.println("hi");
         Socket socket = null;
         int index = -1;
-        byte[] buff = new byte[4];
+        byte[] buff = new byte[16];
         while(true){
             try {
                 socket = this.ss.accept();
                 System.out.println("connected!");
                 os = socket.getOutputStream();
                 is = socket.getInputStream();
+
+                Arrays.fill(buff, (byte) 0);
                 is.read(buff);
-                System.out.println("|new String(buff).trim()");
+                System.out.println("|"+new String(buff).trim()+"|");
                 index = Integer.parseInt(new String(buff).trim());
                 while(!socket.isClosed()){
                     if(downloadSpeed != null) {
-                        if(index != -1)
+                        if(index == -1)
                             os.write(downloadSpeed.toString().getBytes());
                         else
                             os.write(downloadSpeed.getDetailDownload(index).getBytes());

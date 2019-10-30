@@ -1,6 +1,6 @@
 package Util;
 
-public class TimeFormater {
+public class TimeFormatter {
     public static String secondToHMS(long seconds){
         StringBuilder builder = new StringBuilder("");
         int hour = (int)seconds/3600;

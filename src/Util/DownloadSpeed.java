@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadSpeed implements Runnable{
-    private String[] downloadInfos;
+    private String[] downloadInfo;
     private float[] downloadSpeeds;
     private ArrayList<DownloadEntry> entries;
 
@@ -14,25 +14,86 @@ public class DownloadSpeed implements Runnable{
         this.entries = entries;
     }
 
+    private String progress_bar(int length, int percent){
+        int count = percent*length;
+        StringBuilder builder = new StringBuilder();
+        builder.append("[");
+
+        int i = 0;
+        while (i++ < count) {
+            builder.append("#");
+        }
+
+        while (i++ < length){
+            builder.append(" ");
+        }
+
+        builder.append("]");
+        return builder.toString();
+    }
+
+    private ArrayList<Pair<Long, Long>> getBytesDownloadedAndTimeStamp(){
+        ArrayList<Pair<Long, Long>> bytesDownloadedAndTimeStamp = new ArrayList<>();
+
+        int i = 0;
+        int size = this.entries.size();
+        while(i++ < size){
+            bytesDownloadedAndTimeStamp.add(
+                    new Pair<Long, Long>(
+                            this.entries.get(i).getNumberOfDownloadedBytes(),
+                            System.nanoTime()
+                    )
+            );
+        }
+
+        if(bytesDownloadedAndTimeStamp.size() != 0)
+            return bytesDownloadedAndTimeStamp;
+        return null;
+    }
+
+    private int calcPercent(long num1, long num2){
+        return (int)(num1*100/num2);
+    }
+
+    private String calcTimeLeft(float speed, long downloadedBytes, long fileSize, DownloadEntry.State state){
+        if (state == DownloadEntry.State.WAITING){
+            return "INF";
+        }
+        if (state == DownloadEntry.State.PAUSED || state == DownloadEntry.State.COMPLETED){
+            return "00:00:00";
+        }
+        if(fileSize == -1){
+            return "N/A";
+        }
+        return TimeFormatter.secondToHMS((long)((fileSize-downloadedBytes)/speed));
+    }
+
+    private float calcSpeed(long t1, long bytes1, long t2, long bytes2)
+    {
+        return (bytes1-bytes2)*1000000000/(float)(t1-t2); //( byte / second )
+    }
+
+    private void calcSpeedDownloads(ArrayList<Pair<Long, Long>> start, ArrayList<Pair<Long, Long>> finish){
+        if(start == null || finish == null || finish.size() != start.size())
+            return;
+
+        int size = start.size();
+        float[] downloadSpeeds = new float[size];
+        int i = 0;
+        while (i++ < size){
+            downloadSpeeds[i] = this.calcSpeed(
+                    start.get(i).second, start.get(i).first,
+                    finish.get(i).second, finish.get(i).first
+            );
+        }
+        this.downloadSpeeds = downloadSpeeds;
+    }
+
     @Override
     public void run() {
         long[] start_time = null;
         long[] byte_num = null;
         long temp;
-
-        String[] progress_bar = {
-                "[          ]",
-                "[#         ]",
-                "[##        ]",
-                "[###       ]",
-                "[####      ]",
-                "[#####     ]",
-                "[######    ]",
-                "[#######   ]",
-                "[########  ]",
-                "[######### ]",
-                "[##########]"
-        };
 
         int i = 0;
         int index = 0;
@@ -52,9 +113,9 @@ public class DownloadSpeed implements Runnable{
             if(this.entries.size() == 0){
                 continue;
             }
-            if(this.downloadInfos == null
+            if(this.downloadInfo == null
                     || start_time == null
-                    || this.downloadInfos.length != this.entries.size()){
+                    || this.downloadInfo.length != this.entries.size()){
                 System.out.println("resizing....");
                 byte_num = new long[this.entries.size()];
                 start_time = new long[this.entries.size()];
@@ -89,7 +150,7 @@ public class DownloadSpeed implements Runnable{
                         temp = temp * 100 / downloadEntry.getFileSize();
 
                         if(speeds[i] > 0){
-                            time_left = TimeFormater.secondToHMS((long)(byte_remaining/speeds[i]));
+                            time_left = TimeFormatter.secondToHMS((long)(byte_remaining/speeds[i]));
                         }
                         if(downloadEntry.getState() == DownloadEntry.State.PAUSED ||
                                 downloadEntry.getState() == DownloadEntry.State.WAITING){
@@ -101,15 +162,14 @@ public class DownloadSpeed implements Runnable{
                             time_left = "00:00:00";
                         }
 
-                        index = (int)temp/10;
                         downloadInfo[i] = String.format("%3d %20s %10.2f kB/s  %12s  %11s  %4d%%  %11s",
                                 i, downloadEntry.getFileName(), speeds[i] / 1024, time_left,
-                                progress_bar[index], temp,
+                                progress_bar(10, (int)temp), temp,
                                 downloadEntry.getState());
                     } else {
                         downloadInfo[i] = "";
                     }
-                    this.downloadInfos = downloadInfo;
+                    this.downloadInfo = downloadInfo;
                     this.downloadSpeeds = speeds;
                 }
             } catch (IndexOutOfBoundsException e){
@@ -121,13 +181,13 @@ public class DownloadSpeed implements Runnable{
 
     @Override
     public String toString(){
-        if(this.downloadInfos == null || this.downloadInfos.length == 0){
+        if(this.downloadInfo == null || this.downloadInfo.length == 0){
             return "";
         }
         StringBuilder builder = new StringBuilder(String.format("%3s %20s %10s kB/s  %12s  %12s  %5s  %11s\n",
                 "No.", "File name", "Speed", "Time left","Progress", "%", "Status"));
         int i = 0;
-        for(String s : this.downloadInfos){
+        for(String s : this.downloadInfo){
             if( s != null)
                 builder.append(s).append("\n");
         }
@@ -135,7 +195,7 @@ public class DownloadSpeed implements Runnable{
     }
 
     public String getDetailDownload(int index){
-        if(index >= this.entries.size())
+        if(index >= this.downloadInfo.length || index < 0)
             return "  ";
         DownloadEntry entry = this.entries.get(index);
         long bytes_downloaded = entry.getNumberOfDownloadedBytes();
@@ -144,7 +204,7 @@ public class DownloadSpeed implements Runnable{
 
         int percent = 0;
         if(entry.getFileSize() != -1)
-            percent = (int)((entry.getFileSize()-bytes_downloaded)*100/entry.getFileSize());
+            percent = (int)(bytes_downloaded*100/entry.getFileSize());
         else
             percent = -1;
         if(entry.getState() == DownloadEntry.State.COMPLETED){
@@ -155,30 +215,19 @@ public class DownloadSpeed implements Runnable{
             time_left = "INF";
         }
         else
-            time_left = TimeFormater.secondToHMS((long)((entry.getFileSize()-bytes_downloaded)/speed));
+            time_left = TimeFormatter.secondToHMS((long)((entry.getFileSize()-bytes_downloaded)/speed));
 
         StringBuilder builder = new StringBuilder("");
         builder.append("File name: ").append(entry.getFileName()).append("\n");
         builder.append("URL: ").append(entry.getDownloadLink()).append("\n\n");
 
         if(percent != -1){
-            int i = 0;
-            int length = 20;
-            int scale_percent = percent/(100/length);
-            builder.append("progress : [");
-            while(i < length){
-                builder.append("#");
-                ++i;
-            }
-            builder.append("]  ").append(percent).append(" %\n\n");
+            builder.append(this.progress_bar(20, percent)).append(percent).append(" %\n\n");
         }
         builder.append("File size :").append(entry.getFileSize()/1024).append(" kB\n");
         builder.append("Downloaded : ").append(bytes_downloaded/1024).append(" kB\n");
-        builder.append("Download Speed : ").append(speed).append(" kB/s\n");
-        builder.append("Time left : ").append(time_left);
-
-
-
+        builder.append("Download Speed : ").append(speed/1024).append(" kB/s\n");
+        builder.append("Time left : ").append(time_left).append("\n");
 
         return builder.toString();
     }
