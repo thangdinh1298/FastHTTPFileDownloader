@@ -123,14 +123,20 @@ public class DownloadEntry implements Serializable, Runnable {
     }
 
     public long getStartByteOfThread(int index){
+        if(this.tasks == null)
+            return 0;
         return this.tasks[index].getStartByte();
     }
 
     public long getEndByteOfThread(int index){
+        if(this.tasks == null)
+            return 0;
         return this.tasks[index].getEndByte();
     }
 
     public long getNumberOfDownloadedDownloadedBytesOfThread(int index){
+        if(this.tasks == null)
+            return 0;
         return this.tasks[index].getCount();
     }
 
