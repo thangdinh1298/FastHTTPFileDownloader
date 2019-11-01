@@ -122,6 +122,18 @@ public class DownloadEntry implements Serializable, Runnable {
         return downloadedBytes;
     }
 
+    public long getStartByteOfThread(int index){
+        return this.tasks[index].getStartByte();
+    }
+
+    public long getEndByteOfThread(int index){
+        return this.tasks[index].getEndByte();
+    }
+
+    public long getNumberOfDownloadedDownloadedBytesOfThread(int index){
+        return this.tasks[index].getCount();
+    }
+
     @Override
     public String toString() {
         return String.format("%s\t%s", this.getAbsolutePath(), this.getState());
@@ -192,11 +204,11 @@ public class DownloadEntry implements Serializable, Runnable {
 
                 while((c = is.read()) != -1 && !Thread.interrupted()){
                     synchronized (this) {
-                        count++;
+                        this.count++;
                     }
                     os.write(c);
                 }
-                System.out.println("Thread " + this.threadID + " downloaded "  + count + " bytes");
+                System.out.println("Thread " + this.threadID + " downloaded "  + this.count + " bytes");
                 os.flush();
 
             } catch (IOException e) {
@@ -222,6 +234,14 @@ public class DownloadEntry implements Serializable, Runnable {
         }
         public long getCount(){
             return this.count;
+        }
+
+        public long getStartByte() {
+            return startByte;
+        }
+
+        public long getEndByte() {
+            return endByte;
         }
     }
 }
