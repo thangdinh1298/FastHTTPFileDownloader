@@ -173,7 +173,7 @@ public class DownloadSpeed implements Runnable{
         return builder.toString();
     }
 
-    public String getDetailDownload(int index){
+    String getDetailDownload(int index){
         if(index >= this.downloadInfo.length || index < 0)
             return "  ";
         DownloadEntry entry = this.entries.get(index);
@@ -184,18 +184,13 @@ public class DownloadSpeed implements Runnable{
         int ratio = this.calcPercent(bytes_downloaded, entry.getFileSize());
         String time_left = this.calcTimeLeft(speed, bytes_downloaded, file_size, entry.getState());
 
-        StringBuilder builder = new StringBuilder("");
-        builder.append("File name: ").append(entry.getFileName()).append("\n");
-        builder.append("URL: ").append(entry.getDownloadLink()).append("\n\n");
-
-        builder.append(this.progress_bar(20, ratio)).append((ratio >= 0)? ratio:"").append(" %\n\n");
-
-        builder.append("File size :").append(entry.getFileSize()/1024).append(" kB\n");
-        builder.append("Number of thread:").append(entry.getThreadNum()).append("\n");
-        builder.append("Downloaded : ").append(bytes_downloaded/1024).append(" kB\n");
-        builder.append("Download Speed : ").append(speed/1024).append(" kB/s\n");
-        builder.append("Time left : ").append(time_left).append("\n");
-
-        return builder.toString();
+        return "" + "File name: " + entry.getFileName() + "\n" +
+                "URL: " + entry.getDownloadLink() + "\n\n" +
+                this.progress_bar(20, ratio) + ((ratio >= 0) ? ratio : "") + " %\n\n" +
+                "File size :" + entry.getFileSize() / 1024 + " kB\n" +
+                "Number of thread:" + entry.getThreadNum() + "\n" +
+                "Downloaded : " + bytes_downloaded / 1024 + " kB\n" +
+                "Download Speed : " + speed / 1024 + " kB/s\n" +
+                "Time left : " + time_left + "\n";
     }
 }
