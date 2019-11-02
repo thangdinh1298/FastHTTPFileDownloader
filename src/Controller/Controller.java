@@ -15,7 +15,7 @@ public class Controller {
         DownloadManager.getInstance().addDownload(url,fileName, downloadDir);
     }
 
-    public static void deleteDownload(int index) throws IndexOutOfBoundsException, ExecutionException, InterruptedException {
+    public static void deleteDownload(int index) throws IndexOutOfBoundsException{
         //todo: add logic: delete all segments, if merging then somehow delete the merging file
         DownloadManager.getInstance().deleteDownload(index);
     }
