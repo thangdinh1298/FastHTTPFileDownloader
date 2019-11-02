@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -109,19 +110,21 @@ public class Daemon {
                 int idx = Integer.parseInt(index);
 
                 Controller.pauseDownload(idx);
-                Utils.writeResponse(httpExchange, "paused successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided isn't a valid number");
+                return;
             } catch (IndexOutOfBoundsException e){
                 Utils.writeResponse(httpExchange, "Index provided was out of bound");
+                return;
             } /*catch (OperationNotSupportedException e) {
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Pause not supported for this download");
-            } */catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            } */catch (InterruptedException | ExecutionException e) {
+                Utils.writeResponse(httpExchange, "Download was not successful");
+            } catch (CancellationException e){
+                Utils.writeResponse(httpExchange, "paused successfully");
+                return;
             }
         }
     }
