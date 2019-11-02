@@ -3,13 +3,12 @@ package Util;
 import Downloaders.DownloadEntry;
 import Downloaders.DownloaderFactory;
 
-import javax.imageio.IIOException;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+//import java.util.HashSet;
+//import java.util.Set;
 
 public class FileManager {
     public static void writeToFile(String fileName, DownloadEntry entry) throws IOException {
