@@ -113,6 +113,7 @@ public class Daemon {
                 int idx = Integer.parseInt(index);
 
                 Controller.pauseDownload(idx);
+                Utils.writeResponse(httpExchange, "paused successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided isn't a valid number");
