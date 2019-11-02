@@ -117,7 +117,7 @@ public class DownloadEntry implements Serializable, Runnable {
         Long downloadedBytes = 0L;
         for(int i = 0; i < this.futures.length; ++i){
             if(this.tasks[i] != null)
-                downloadedBytes += this.tasks[i].getCount();
+                downloadedBytes += this.tasks[i].getBytesDownloaded();
         }
         return downloadedBytes;
     }
@@ -137,7 +137,7 @@ public class DownloadEntry implements Serializable, Runnable {
     public long getNumberOfDownloadedDownloadedBytesOfThread(int index){
         if(this.tasks == null || this.tasks[index] == null)
             return 0;
-        return this.tasks[index].getCount();
+        return this.tasks[index].getBytesDownloaded();
     }
 
     @Override
@@ -158,26 +158,26 @@ public class DownloadEntry implements Serializable, Runnable {
         private long startByte;
         private long endByte; //num bytes to download including the start byte
         private int threadID;
-        private long count;
+        private long bytesDownloaded;
 
         public DownloadThread(long startByte, long endByte, int threadID) {
             this.startByte = startByte;
             this.endByte = endByte;
             this.threadID = threadID;
-            this.count = 0;
+            this.bytesDownloaded = 0;
         }
 
         public DownloadThread(long startByte, long endByte, long bytesDownloaded, int threadID) {
             this.endByte = endByte;
             this.startByte = startByte;
             this.threadID = threadID;
-            this.count = bytesDownloaded;
+            this.bytesDownloaded = bytesDownloaded;
         }
 
         public DownloadThread(long startByte){
             this.startByte = startByte;
             this.endByte = -1;
-            this.count = 0;
+            this.bytesDownloaded = 0;
         }
 
         /*
@@ -196,10 +196,14 @@ public class DownloadEntry implements Serializable, Runnable {
                 conn.setRequestProperty( "charset", "utf-8");
                 conn.setRequestProperty("Content-Language", "en-US");
                 if (endByte != -1){
-                    conn.setRequestProperty("Range", "bytes=" + this.startByte  + "-" + this.endByte);
+                    conn.setRequestProperty("Range", "bytes=" +
+                            (this.startByte + this.getBytesDownloaded()) +
+                            "-" + this.endByte);
                 }
                 else {
-                    conn.setRequestProperty("Range", "bytes=" + this.startByte  + "-");
+                    conn.setRequestProperty("Range", "bytes=" +
+                            (this.startByte +this.getBytesDownloaded())
+                            + "-");
                 }
                 conn.connect();
 
@@ -210,11 +214,11 @@ public class DownloadEntry implements Serializable, Runnable {
 
                 while((c = is.read()) != -1 && !Thread.interrupted()){
                     synchronized (this) {
-                        this.count++;
+                        this.bytesDownloaded++;
                     }
                     os.write(c);
                 }
-                System.out.println("Thread " + this.threadID + " downloaded "  + this.count + " bytes");
+                System.out.println("Thread " + this.threadID + " downloaded "  + this.bytesDownloaded + " bytes");
                 os.flush();
 
             } catch (IOException e) {
@@ -238,8 +242,8 @@ public class DownloadEntry implements Serializable, Runnable {
                 }
             }
         }
-        public long getCount(){
-            return this.count;
+        public long getBytesDownloaded(){
+            return this.bytesDownloaded;
         }
 
         public long getStartByte() {
