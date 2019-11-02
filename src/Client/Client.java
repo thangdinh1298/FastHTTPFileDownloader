@@ -1,7 +1,14 @@
 package Client;
 
 import Util.Utils;
+import Util.Window;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.Socket;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 public class Client {
     private final String DAEMON_ADDR = "http://localhost:8080";
@@ -47,6 +54,52 @@ public class Client {
         Utils.doGet(endpoint, headers);
     }
 
+    public void getDownloadSpeed(){
+        System.out.println("here");
+        String ip = "localhost";
+        int port = 6969;
+        try (Socket socket = new Socket(ip, port)){
+            System.out.println("connected!!");
+            byte[] buff = new byte[1024];
+            InputStream is = socket.getInputStream();
+            int timeout = 5;
+            String temp = "";
+            String str;
+
+            Window.clear();
+
+            while(true){
+                if(timeout <= 0){
+                    break;
+                }
+                if(is.available() == 0){
+                    TimeUnit.MILLISECONDS.sleep(900);
+                    timeout--;
+                    continue;
+                }
+
+                Window.gotoxy(0, 0);
+
+                Arrays.fill(buff, (byte) 0);
+
+                is.read(buff);
+                str = new String(buff);//.replaceAll("\\s+$", "");
+                str = String.valueOf(str.toCharArray(), 0, str.lastIndexOf('\n'));
+                System.out.println(str);
+                if(str.equals(temp))
+                    timeout--;
+                else
+                    timeout = 5;
+                temp = str;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public static void main(String[] args) {
         Client client = new Client();
 
@@ -76,6 +129,9 @@ public class Client {
             case "deletedownload":
                 index = args[1];
                 client.deleteDownload(index);
+                break;
+            case "getdownloadspeed":
+                client.getDownloadSpeed();
                 break;
             default:
                 System.out.println("Operation not supported");

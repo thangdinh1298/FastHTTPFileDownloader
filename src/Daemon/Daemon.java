@@ -2,6 +2,9 @@ package Daemon;
 
 import Controller.Controller;
 import Downloaders.DownloadEntry;
+import Downloaders.DownloadManager;
+import Util.DownloadSpeed;
+import Util.SServer;
 import Util.Utils;
 //import Util.ThreadPool;
 import com.sun.net.httpserver.HttpExchange;
@@ -17,13 +20,22 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
 
 public class Daemon {
     public Daemon() throws IOException {
-        Controller.getInstance(); //Initialize the controller to avoid thread-safe problems
 //        ThreadPool.getInstance();
+        DownloadManager dm = DownloadManager.getInstance();
 
-        //try different ports
+        DownloadSpeed ds = new DownloadSpeed(dm.getEntries());
+        Thread tds = new Thread(ds);
+        tds.start();
+
+        Thread tss = new Thread(new SServer(ds));
+        tss.start();
+
+        //todo: try different ports
         InetAddress localHost = InetAddress.getLoopbackAddress();
         System.out.println(localHost);
         InetSocketAddress sockAddr = new InetSocketAddress(localHost, 8080);
@@ -32,7 +44,7 @@ public class Daemon {
         server.createContext("/pause", new pauseHandler());
         server.createContext("/resume", new resumeHandler());
         server.createContext("/delete", new deleteHandler());
-        server.setExecutor(null); // creates a default executor
+        server.setExecutor(Executors.newSingleThreadExecutor());
         server.start();
     }
 
@@ -46,7 +58,7 @@ public class Daemon {
 
                 System.out.println(fileName + " " + downloadDir);
                 if (fileName == "" || downloadDir == "" || fileName == null || downloadDir == null){
-                    Utils.writeResponse(httpExchange, "Please specify the download directory and file name", 400);
+                    Utils.writeResponse(httpExchange, "Please specify the download directory and file name");
                 }
                 InputStream is = httpExchange.getRequestBody();
 
@@ -58,18 +70,17 @@ public class Daemon {
                 System.out.println(body.toString());
                 try{
                     URL url = new URL(body.toString());
-                    Controller.getInstance().addDownload(url, fileName, downloadDir);
+                    Controller.addDownload(url, fileName, downloadDir);
                     httpExchange.getResponseHeaders().add("Content-Type", "text/plain");
-                    Utils.writeResponse(httpExchange, "Download added successfully", 200);
+                    Utils.writeResponse(httpExchange, "Download added successfully");
                 } catch (MalformedURLException e){
-                    Utils.writeResponse(httpExchange, "Invalid URL", 400);
+                    Utils.writeResponse(httpExchange, "Invalid URL");
                     return;
                 }
             }
             else if (httpExchange.getRequestMethod().equalsIgnoreCase("GET")){
-                ArrayList<DownloadEntry> entries = Controller.getInstance().getEntries();
+                ArrayList<DownloadEntry> entries = DownloadManager.getInstance().getEntries();
 
-                System.out.println(entries);
 
                 StringBuilder response = new StringBuilder();
 
@@ -77,7 +88,9 @@ public class Daemon {
                     response.append(i + "\t" + entries.get(i).toString() + '\n');
                 }
 
-                Utils.writeResponse(httpExchange, response.toString(), 200);
+                System.out.println(response.toString());
+
+                Utils.writeResponse(httpExchange, response.toString());
             }
         }
     }
@@ -89,20 +102,26 @@ public class Daemon {
             String index = httpExchange.getRequestHeaders().getFirst("index");
 
             if (index == null){
-                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+                Utils.writeResponse(httpExchange, "An index was not provided");
             }
 
             try{
                 int idx = Integer.parseInt(index);
 
-                Controller.getInstance().pauseDownload(idx);
-                Utils.writeResponse(httpExchange, "paused successfully", 200);
+                Controller.pauseDownload(idx);
+                Utils.writeResponse(httpExchange, "paused successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
-            } catch (OperationNotSupportedException e) {
+                Utils.writeResponse(httpExchange, "Index provided isn't a valid number");
+            } catch (IndexOutOfBoundsException e){
+                Utils.writeResponse(httpExchange, "Index provided was out of bound");
+            } /*catch (OperationNotSupportedException e) {
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+                Utils.writeResponse(httpExchange, "Pause not supported for this download");
+            } */catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -114,19 +133,19 @@ public class Daemon {
             String index = httpExchange.getRequestHeaders().getFirst("index");
 
             if (index == null){
-                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+                Utils.writeResponse(httpExchange, "An index was not provided");
             }
 
             try{
                 int idx = Integer.parseInt(index);
-                Controller.getInstance().resumeDownload(idx);
-                Utils.writeResponse(httpExchange, "resumed successfully", 200);
+                Controller.resumeDownload(idx);
+                Utils.writeResponse(httpExchange, "resumed successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
-            } catch (OperationNotSupportedException e) {
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid");
+            } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 500);
+                Utils.writeResponse(httpExchange, "Index provided was out of bound");
             }
         }
     }
@@ -137,16 +156,23 @@ public class Daemon {
             String index = httpExchange.getRequestHeaders().getFirst("index");
 
             if (index == null){
-                Utils.writeResponse(httpExchange, "An index was not provided", 400);
+                Utils.writeResponse(httpExchange, "An index was not provided");
             }
 
             try{
                 int idx = Integer.parseInt(index);
-                Controller.getInstance().deleteDownload(idx);
-                Utils.writeResponse(httpExchange, "deleted successfully", 200);
+                Controller.deleteDownload(idx);
+                Utils.writeResponse(httpExchange, "deleted successfully");
             }catch (NumberFormatException e){
                 e.printStackTrace();
-                Utils.writeResponse(httpExchange, "Index provided wasn't valid", 400);
+                Utils.writeResponse(httpExchange, "Index provided wasn't a number");
+            }catch (IndexOutOfBoundsException e){
+                System.out.println("Index out of bound");
+                Utils.writeResponse(httpExchange, "Index provided wasn't valid");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
             }
         }
     }
