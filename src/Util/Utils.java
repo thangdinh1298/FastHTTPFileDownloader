@@ -14,11 +14,13 @@ import java.util.Map;
 public class Utils {
     public static void writeResponse(HttpExchange httpExchange, String msg){
         OutputStream os = httpExchange.getResponseBody();
+        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(os));
 
-        byte[] b = msg.getBytes(Charset.defaultCharset());
         try {
-            httpExchange.sendResponseHeaders(200, b.length);
-            os.write(b);
+            httpExchange.sendResponseHeaders(200, 0);
+            bw.write(msg);
+            bw.newLine();
+            bw.flush();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
