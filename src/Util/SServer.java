@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
@@ -57,7 +58,9 @@ public class SServer implements Runnable{
                 System.out.println("Broken pipe1");
             } catch (InterruptedException e) {
                 System.out.println("InterruptException!");
-            } finally {
+            } catch(NullPointerException e){
+                System.out.println("Null pointer exception!");
+            }finally {
                 try {
                     if (os != null)
                         os.close();
