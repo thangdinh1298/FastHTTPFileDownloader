@@ -5,8 +5,11 @@ import Downloaders.DownloaderFactory;
 
 import javax.imageio.IIOException;
 import java.io.*;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class FileManager {
     public static void writeToFile(String fileName, DownloadEntry entry) throws IOException {
@@ -84,6 +87,10 @@ public class FileManager {
         return entries;
     }
 
+    public static boolean delete(String path, String filename){
+        return new File(String.valueOf(Paths.get(path, filename))).delete();
+    }
+
     public static void delete(DownloadEntry entry){
         if(entry.isResumable()) {
             int i = 0;
@@ -98,5 +105,66 @@ public class FileManager {
             }
         }
 
+    }
+
+    public static boolean createFile(String path, String filename){
+        try {
+            return new File(String.valueOf(Paths.get(path, filename))).createNewFile();
+        } catch (IOException e) {
+            System.out.println("error: can't create file!");
+        }
+        return false;
+    }
+
+//    public static String renameIfExist(String path_to_file, String filename, ArrayList<DownloadEntry> entries){
+//        Path pathname = Paths.get(path_to_file, filename);
+//        String[] splitFilename = filename.split("\\.", 2);
+//
+//        Set<String> files = new HashSet<>();
+//        for(DownloadEntry entry : entries){
+//            files.add(entry.getFileName());
+//        }
+//
+//        String name = splitFilename[0];
+//        String ext = (splitFilename.length > 1)? splitFilename[1]:"";
+//        String dot = (splitFilename.length > 1)? ".":"";
+//
+//        int index = 1;
+//
+//        while(new File(String.valueOf(pathname)).exists() || files.contains(filename)){
+//            filename = String.format("%s (%d)%s%s", name, index, dot, ext);
+//            pathname = Paths.get(path_to_file, filename);
+//            index++;
+//        }
+//        return filename;
+//    }
+
+    public static String renameIfExist(String path_to_file, String filename){
+        Path pathname = Paths.get(path_to_file, filename);
+        String[] splitFilename = filename.split("\\.", 2);
+        String name = splitFilename[0];
+        String ext = (splitFilename.length > 1)? splitFilename[1]:"";
+        String dot = (splitFilename.length > 1)? ".":"";
+
+        int index = 1;
+
+        while(new File(String.valueOf(pathname)).exists()){
+            filename = String.format("%s (%d)%s%s", name, index, dot, ext);
+            pathname = Paths.get(path_to_file, filename);
+            index++;
+        }
+        return filename;
+    }
+
+    public static String renameIfExistAndCreateNewFile(String path, String filename){
+        filename = FileManager.renameIfExist(path, filename);
+        FileManager.createFile(path, filename);
+        return filename;
+    }
+
+    public static void main(String[] args) {
+        String path = "downloadDir";
+        String filename = "test";
+        FileManager.renameIfExistAndCreateNewFile(path, filename);
     }
 }

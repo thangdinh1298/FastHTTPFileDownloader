@@ -1,7 +1,7 @@
 package Downloaders;
 
 import Util.Configs;
-import Util.Utils;
+import Util.FileManager;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -36,6 +36,9 @@ public class DownloadManager {
 
         System.out.println(resumable + " "  + fileSize);
 
+//        System.out.println("-----------------------------------------------------");
+        fileName = FileManager.renameIfExistAndCreateNewFile(downloadDir, fileName);
+//        System.out.println("-------------------"+fileName+"----------------------");
         DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                 fileSize, url, downloadDir, fileName);
         if (de != null){
