@@ -1,7 +1,7 @@
 package Downloaders;
 
 import Util.Configs;
-import Util.Utils;
+import Util.FileManager;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -36,6 +36,9 @@ public class DownloadManager {
 
         System.out.println(resumable + " "  + fileSize);
 
+//        System.out.println("-----------------------------------------------------");
+        fileName = FileManager.renameIfExistAndCreateNewFile(downloadDir, fileName);
+//        System.out.println("-------------------"+fileName+"----------------------");
         DownloadEntry de = DownloaderFactory.getDownloadEntry(resumable,
                 fileSize, url, downloadDir, fileName);
         if (de != null){
@@ -65,10 +68,13 @@ public class DownloadManager {
             throw new IndexOutOfBoundsException();
         }
         DownloadEntry de = entries.get(index);
+        if (de.getState() == DownloadEntry.State.COMPLETED){
+            return;
+        }
         executorService.submit(de);
     }
 
-    public synchronized void deleteDownload(int index) throws IndexOutOfBoundsException, InterruptedException, ExecutionException, CancellationException {
+    public synchronized void deleteDownload(int index) {
         if (index >= entries.size()) {
             System.out.println(index);
             throw new IndexOutOfBoundsException();
@@ -76,15 +82,8 @@ public class DownloadManager {
         DownloadEntry de = entries.get(index);
         try{
             de.pause();
-        }catch (InterruptedException e){
-            e.printStackTrace();
-//            throw e;
-        } catch (ExecutionException e){
-            e.printStackTrace();
-//            throw e;
-        } catch (CancellationException e) {
-            e.printStackTrace();
-//            throw e;
+        } catch (CancellationException | ExecutionException | InterruptedException e) {
+
         } //remove the download even if the pausing fails???
         finally {
             System.out.println("--------------------------------------------");
