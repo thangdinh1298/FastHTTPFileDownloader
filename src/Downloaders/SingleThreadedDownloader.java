@@ -16,6 +16,7 @@ public class SingleThreadedDownloader extends DownloadEntry{
     public SingleThreadedDownloader(URL url, String downloadDir, String fileName, boolean resumable) throws IOException{
         super(url, downloadDir, fileName, resumable);
         this.threadNum = 1;
+        this.fileSize = -1;
     }
 
     @Override
@@ -43,10 +44,11 @@ public class SingleThreadedDownloader extends DownloadEntry{
         }
         if (this.resumable == true){
             long bytesDownloaded = new File(this.getAbsolutePath()).length();
-            this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(bytesDownloaded));
+            this.tasks[0] = new DownloadThread(bytesDownloaded);
         } else {
-            this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(new DownloadThread(0));
+            this.tasks[0] = new DownloadThread(0);
         }
+        this.futures[0] = /*Controller*/DownloadManager.getInstance().getExecutorService().submit(this.tasks[0]);
 
 
         try {

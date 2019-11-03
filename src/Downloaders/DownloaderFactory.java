@@ -13,7 +13,8 @@ public class DownloaderFactory {
         try{
             if (resumable == true && fileSize != -1){
                 //initialize multithreaded download
-                return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
+//                return new MultiThreadedDownloader(url, fileSize, downloadDir, fileName);
+                return new SingleThreadedDownloader(url, downloadDir, fileName, true);
             }else {
                 if (resumable == true){
                     return new SingleThreadedDownloader(url, downloadDir, fileName, true);
