@@ -67,7 +67,7 @@ public class DownloadSpeed implements Runnable{
     }
 
     private int calcPercent(long num1, long num2){
-        if(num2 < 0)
+        if(num2 <= 0)
             return -1;
         return (int)(num1*100/num2);
     }
