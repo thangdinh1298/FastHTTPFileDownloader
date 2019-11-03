@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane fx:id="main" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="719.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="JavafxClient.Controller">
+   <children>
+      <MenuBar prefHeight="29.0" prefWidth="719.0">
+        <menus>
+          <Menu mnemonicParsing="false" text="File">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Close" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Edit">
+            <items>
+              <MenuItem mnemonicParsing="false" text="Delete" />
+            </items>
+          </Menu>
+          <Menu mnemonicParsing="false" text="Help">
+            <items>
+              <MenuItem mnemonicParsing="false" text="About" />
+            </items>
+          </Menu>
+        </menus>
+      </MenuBar>
+      <ToolBar layoutY="29.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="719.0" AnchorPane.topAnchor="29.0">
+        <items>
+          <Button mnemonicParsing="false" onMouseClicked="#buttonPressed" text="AddURL" />
+            <Button mnemonicParsing="false" text="Pause" />
+            <Button mnemonicParsing="false" text="Resume" />
+            <Button mnemonicParsing="false" text="Delete" />
+        </items>
+      </ToolBar>
+      <TableView fx:id="tbData" layoutX="16.0" layoutY="79.0" prefHeight="307.0" prefWidth="689.0">
+        <columns>
+          <TableColumn fx:id="id" prefWidth="49.0" text="Id" />
+          <TableColumn fx:id="fileName" prefWidth="212.0" text="File Name" />
+            <TableColumn fx:id="speed" prefWidth="110.0" text="Speed " />
+            <TableColumn fx:id="timeLeft" prefWidth="121.0" text="Time Left" />
+            <TableColumn fx:id="status" prefWidth="196.0" text="Status" />
+        </columns>
+      </TableView>
+   </children>
+</AnchorPane>
