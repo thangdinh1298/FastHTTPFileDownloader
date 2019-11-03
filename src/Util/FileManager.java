@@ -161,10 +161,4 @@ public class FileManager {
         FileManager.createFile(path, filename);
         return filename;
     }
-
-    public static void main(String[] args) {
-        String path = "downloadDir";
-        String filename = "test";
-        FileManager.renameIfExistAndCreateNewFile(path, filename);
-    }
 }
