@@ -20,6 +20,7 @@ import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 
@@ -60,6 +61,7 @@ public class Daemon {
                 System.out.println(fileName + " " + downloadDir);
                 if (fileName == "" || downloadDir == "" || fileName == null || downloadDir == null){
                     Utils.writeResponse(httpExchange, "Please specify the download directory and file name");
+                    return;
                 }
                 InputStream is = httpExchange.getRequestBody();
 
@@ -92,6 +94,7 @@ public class Daemon {
                 System.out.println(response.toString());
 
                 Utils.writeResponse(httpExchange, response.toString());
+                return;
             }
         }
     }
@@ -114,15 +117,19 @@ public class Daemon {
             }catch (NumberFormatException e){
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided isn't a valid number");
+                return;
             } catch (IndexOutOfBoundsException e){
                 Utils.writeResponse(httpExchange, "Index provided was out of bound");
+                return;
             } /*catch (OperationNotSupportedException e) {
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Pause not supported for this download");
-            } */catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+            } */catch (InterruptedException | ExecutionException e) {
+                Utils.writeResponse(httpExchange, "Download was not successful");
+                return;
+            } catch (CancellationException e){
+                Utils.writeResponse(httpExchange, "paused successfully");
+                return;
             }
         }
     }
@@ -135,18 +142,22 @@ public class Daemon {
 
             if (index == null){
                 Utils.writeResponse(httpExchange, "An index was not provided");
+                return;
             }
 
             try{
                 int idx = Integer.parseInt(index);
                 Controller.resumeDownload(idx);
                 Utils.writeResponse(httpExchange, "resumed successfully");
+                return;
             }catch (NumberFormatException e){
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid");
+                return;
             } catch (IndexOutOfBoundsException e) {
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided was out of bound");
+                return;
             }
         }
     }
@@ -158,22 +169,22 @@ public class Daemon {
 
             if (index == null){
                 Utils.writeResponse(httpExchange, "An index was not provided");
+                return;
             }
 
             try{
                 int idx = Integer.parseInt(index);
                 Controller.deleteDownload(idx);
                 Utils.writeResponse(httpExchange, "deleted successfully");
+                return;
             }catch (NumberFormatException e){
                 e.printStackTrace();
                 Utils.writeResponse(httpExchange, "Index provided wasn't a number");
+                return;
             }catch (IndexOutOfBoundsException e){
                 System.out.println("Index out of bound");
                 Utils.writeResponse(httpExchange, "Index provided wasn't valid");
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            } catch (ExecutionException e) {
-                e.printStackTrace();
+                return;
             }
         }
     }
