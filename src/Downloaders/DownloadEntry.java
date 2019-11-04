@@ -30,7 +30,6 @@ public class DownloadEntry implements Serializable, Runnable {
         this.fileName = fileName;
         this.resumable = resumable;
         this.state = State.WAITING;
-        System.out.println(this.getAbsolutePath());
     }
 
     public enum State {
