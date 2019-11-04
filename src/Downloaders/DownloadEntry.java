@@ -30,6 +30,7 @@ public class DownloadEntry implements Serializable, Runnable {
         this.fileName = fileName;
         this.resumable = resumable;
         this.state = State.WAITING;
+        System.out.println(this.getAbsolutePath());
     }
 
     public enum State {
@@ -209,7 +210,18 @@ public class DownloadEntry implements Serializable, Runnable {
 
                 is = conn.getInputStream();
 
-                os = new BufferedOutputStream(new FileOutputStream(String.valueOf(Paths.get(downloadDir, fileName + this.threadID)), true));
+                Boolean append = resumable;
+                String name;
+
+                if (threadNum > 1){
+                    name = String.valueOf(Paths.get(downloadDir, fileName + this.threadID));
+                }else {
+                    name = String.valueOf(Paths.get(downloadDir, fileName));
+                }
+
+
+                os = new BufferedOutputStream(new FileOutputStream(name, append));
+
                 int c;
 
                 while((c = is.read()) != -1 && !Thread.interrupted()){
