@@ -34,7 +34,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 public class Controller implements Initializable  {
-    @FXML AnchorPane main;
     @FXML public Button pause;
     @FXML public Button resume;
     @FXML public Button delete;
@@ -49,7 +48,6 @@ public class Controller implements Initializable  {
     public String currentId;
 
     public void addURLButton(Event event) {
-        Stage mainStage = (Stage) main.getScene().getWindow();
         try {
             FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("UrlPopup.fxml"));
             Parent root1 = (Parent) fxmlLoader.load();
@@ -105,6 +103,16 @@ public class Controller implements Initializable  {
                 }
                 if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
                     DownloadModel rowData = row.getItem();
+                    try {
+                        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DetailDownload.fxml"));
+                        Parent root1 = (Parent) fxmlLoader.load();
+                        Stage stage = new Stage();
+                        stage.initModality(Modality.APPLICATION_MODAL);
+                        stage.setScene(new Scene(root1));
+                        stage.show();
+                    } catch(Exception e) {
+                        e.printStackTrace();
+                    }
                     System.out.println("Double click on: "+rowData.getIdProperty());
                 }
 
