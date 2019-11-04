@@ -97,4 +97,73 @@ public class Utils {
             e.printStackTrace();
         }
     }
+
+    public static void _doGet(String url, HashMap<String, String> headers) throws MalformedURLException, IOException {
+        try{
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            //write headers
+            con.setRequestMethod("GET");
+            for (Map.Entry<String, String> entry: headers.entrySet()){
+                con.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+
+//            int responseCode = con.getResponseCode();
+
+            //read return value
+            String line;
+            StringBuilder builder = new StringBuilder();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            while((line = in.readLine()) != null){
+                builder.append(line + "\n");
+            }
+            in.close();
+            System.out.println(builder.toString());
+
+        }catch (MalformedURLException e){
+            throw e;
+        } catch (IOException e){
+            throw e;
+        }
+    }
+
+    public static String _doPost(String url, HashMap<String, String> headers, String body) throws Exception {
+        try{
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            //write headers
+            con.setRequestMethod("POST");
+            for (Map.Entry<String, String> entry: headers.entrySet()){
+                con.setRequestProperty(entry.getKey(), entry.getValue());
+            }
+
+            //write body
+            con.setDoOutput(true);
+            OutputStreamWriter writer = new OutputStreamWriter(con.getOutputStream());
+            writer.write(body);
+
+            writer.close();
+//            int responseCode = con.getResponseCode();
+
+            //read return value
+            String line;
+            StringBuilder builder = new StringBuilder();
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            while((line = in.readLine()) != null){
+                builder.append(line);
+            }
+            in.close();
+            System.out.println(builder.toString());
+
+            if (builder.toString().equalsIgnoreCase("Invalid URL")) {
+                throw new Exception("Invalid URL");
+            }
+
+            return builder.toString();
+        }catch (MalformedURLException e){
+            throw e;
+        } catch (IOException e){
+            throw e;
+        }
+    }
 }
