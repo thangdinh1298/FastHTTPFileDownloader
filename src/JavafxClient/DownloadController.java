@@ -2,8 +2,10 @@ package JavafxClient;
 
 import Util.Utils;
 import Util.Window;
+import com.sun.javafx.fxml.builder.JavaFXSceneBuilder;
 import javafx.beans.property.SimpleStringProperty;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -14,7 +16,7 @@ import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class DownloadController {
-    public static ArrayList<DownloadModel> downloadModels = new ArrayList<>();
+//    public static ArrayList<DownloadModel> downloadModels = new ArrayList<>();
 
     private final String DAEMON_ADDR = "http://localhost:8080";
 
@@ -33,42 +35,66 @@ public class DownloadController {
         headers.put("file-name", fileName);
         headers.put("download-dir", downloadDir);
 
-        Utils.doPost(endpoint, headers, url);
+        try {
+            Utils._doPost(endpoint, headers, url);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Dialog.showDialog("Warning", e.getMessage());
+        }
 //        Controller.updateTable();
     }
 
     public void getAllDownloads(){
         String endpoint = DAEMON_ADDR +  "/" + "download";
         System.out.println(endpoint);
-        Utils.doGet(endpoint, new HashMap<>());
+        try {
+            Utils._doGet(endpoint, new HashMap<>());
+        } catch (IOException e) {
+            e.printStackTrace();
+            Dialog.showDialog("Warning", e.getMessage());
+        }
     }
 
     public void pauseDownload(String index){
         String endpoint = DAEMON_ADDR +  "/" + "pause";
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("index", index);
-        Utils.doGet(endpoint, headers);
+        try {
+            Utils._doGet(endpoint, headers);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Dialog.showDialog("Warning", e.getMessage());
+        }
     }
 
     public void resumeDownload(String index){
         String endpoint = DAEMON_ADDR +  "/" + "resume";
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("index", index);
-        Utils.doGet(endpoint, headers);
+        try {
+            Utils._doGet(endpoint, headers);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Dialog.showDialog("Warning", e.getMessage());
+        }
     }
 
     public void deleteDownload(String index){
         String endpoint = DAEMON_ADDR +  "/" + "deleteDownload";
         HashMap<String, String> headers = new HashMap<String, String>();
         headers.put("index", index);
-        Utils.doGet(endpoint, headers);
+        try {
+            Utils._doGet(endpoint, headers);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Dialog.showDialog("Warning", e.getMessage());
+        }
     }
 
     public void getDownloadSpeed(String str_index){
         String ip = "localhost";
         int port = 6969;
         try (Socket socket = new Socket(ip, port)){
-            System.out.println("connected!!");
             byte[] buff = new byte[1024];
             OutputStream os = socket.getOutputStream();
             os.write(str_index.getBytes());
@@ -84,27 +110,21 @@ public class DownloadController {
             else
                 str = "";
 
-            System.out.println("gag"+str);
-
             String[] downloads = str.split("\n");
-            downloadModels.clear();
-            System.out.println(str.length());
-            if (str.length() < 1) return;
+
             for(int i = 1; i < downloads.length; i++) {
                 String download = downloads[i];
+                System.out.println(download);
                 String downloadInfos[] = download.split("\\s+");
-                for(String s: downloadInfos) {
-                    System.out.println(s);
-                }
                 String id = downloadInfos[1];
                 String fileName = downloadInfos[2];
                 String speed = downloadInfos[3] +" "+ downloadInfos[4];
-                String timeLeft = downloadInfos[downloadInfos.length - 4];
-                String status = downloadInfos[downloadInfos.length - 2].equalsIgnoreCase("100%") ? "COMPLETED" :downloadInfos[downloadInfos.length - 2];
-                DownloadModel downloadModel = new DownloadModel(id, fileName, speed, timeLeft, status);
-                downloadModels.add(downloadModel);
+                String timeLeft = downloadInfos[downloadInfos.length - 5];
+                String status = downloadInfos[downloadInfos.length - 1];
+                String px = downloadInfos[downloadInfos.length -2];
+                DownloadModel downloadModel = new DownloadModel(id, fileName, speed, timeLeft,px, status);
+                Controller.addOrUpdate(i -1, downloadModel);
             }
-            Controller.downloadModels.setAll(downloadModels);
         } catch (IOException e) {
             System.out.println("IOException!");
         }

@@ -32,10 +32,10 @@
       </MenuBar>
       <ToolBar layoutY="29.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="40.0" prefWidth="719.0" AnchorPane.topAnchor="29.0">
         <items>
-          <Button mnemonicParsing="false" onMouseClicked="#buttonPressed" text="AddURL" />
-            <Button mnemonicParsing="false" text="Pause" />
-            <Button mnemonicParsing="false" text="Resume" />
-            <Button mnemonicParsing="false" text="Delete" />
+          <Button mnemonicParsing="false" onMouseClicked="#addURLButton" text="AddURL" />
+            <Button fx:id="pause" mnemonicParsing="false" onMouseClicked="#pauseButton" text="Pause" />
+            <Button fx:id="resume" mnemonicParsing="false" onMouseClicked="#resumeButton" text="Resume" />
+            <Button fx:id="delete" mnemonicParsing="false" onMouseClicked="#deleteButton" text="Delete" />
         </items>
       </ToolBar>
       <TableView fx:id="tbData" layoutX="16.0" layoutY="79.0" prefHeight="307.0" prefWidth="689.0">
@@ -44,7 +44,8 @@
           <TableColumn fx:id="fileName" prefWidth="212.0" text="File Name" />
             <TableColumn fx:id="speed" prefWidth="110.0" text="Speed " />
             <TableColumn fx:id="timeLeft" prefWidth="121.0" text="Time Left" />
-            <TableColumn fx:id="status" prefWidth="196.0" text="Status" />
+            <TableColumn fx:id="px" prefWidth="85.0" text="\%" />
+            <TableColumn fx:id="status" prefWidth="111.0" text="Status" />
         </columns>
       </TableView>
    </children>
