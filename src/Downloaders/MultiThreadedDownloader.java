@@ -46,7 +46,7 @@ public class MultiThreadedDownloader extends DownloadEntry{
             long bytesDownloaded =  new File(String.valueOf(Paths.get(this.downloadDir, this.fileName + i))).length();
 //            System.out.println("==============================THREAD " + i + "==================================");
 //            System.out.println("Numbytes downloaded for thread " + i + " is " + bytesDownloaded);
-            startByte = chunkStartByte + bytesDownloaded;
+            startByte = chunkStartByte;
             endByte = chunkStartByte + segmentSize - 1;
             if (i == this.threadNum - 1) endByte = this.fileSize - 1;
 //            System.out.println(startByte + " " + chunkSize);
