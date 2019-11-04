@@ -167,6 +167,9 @@ public class DownloadSpeed implements Runnable{
                 _downloadInfo = this.getDownloadInfo();
                 if(_downloadInfo != null)
                     this.downloadInfo = _downloadInfo;
+                else if(this.entries != null && this.entries.size() == 0){
+                    this.downloadInfo = null;
+                }
 
                 TimeUnit.MILLISECONDS.sleep(1000);
             } catch (InterruptedException e) {
