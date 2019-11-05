@@ -1,4 +1,4 @@
-package JavafxClient;
+package JavafxClient.View;
 
 import javafx.scene.control.Alert;
 

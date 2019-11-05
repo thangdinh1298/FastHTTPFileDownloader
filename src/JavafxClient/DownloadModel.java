@@ -160,46 +160,4 @@ public class DownloadModel {
     public void setStatus(AtomicReference<String> status) {
         this.status = status;
     }
-
-
-
-    //    public String getId() {
-//        return id.get();
-//    }
-//
-//    public void setId(String id) {
-//        this.id = new SimpleStringProperty(id);;
-//    }
-//
-//    public String getFileName() {
-//        return fileName.get();
-//    }
-//
-//    public void setFileName(String fileName) {
-//        this.fileName = new SimpleStringProperty(fileName);
-//    }
-//
-//    public String getSpeed() {
-//        return speed.get();
-//    }
-//
-//    public void setSpeed(String speed) {
-//        this.speed = new SimpleStringProperty(speed);
-//    }
-//
-//    public String getTimeLeft() {
-//        return timeLeft.get();
-//    }
-//
-//    public void setTimeLeft(String timeLeft) {
-//        this.timeLeft = new SimpleStringProperty(timeLeft);
-//    }
-//
-//    public String getStatus() {
-//        return status.get();
-//    }
-//
-//    public void setStatus(String status) {
-//        this.status = new SimpleStringProperty(status);
-//    }
 }

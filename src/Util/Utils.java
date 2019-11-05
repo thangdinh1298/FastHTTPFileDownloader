@@ -2,6 +2,8 @@ package Util;
 
 import com.sun.net.httpserver.HttpExchange;
 
+import java.awt.*;
+import java.awt.datatransfer.*;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -158,7 +160,6 @@ public class Utils {
             if (builder.toString().equalsIgnoreCase("Invalid URL")) {
                 throw new Exception("Invalid URL");
             }
-
             return builder.toString();
         }catch (MalformedURLException e){
             throw e;
@@ -166,4 +167,33 @@ public class Utils {
             throw e;
         }
     }
+
+    public static String getClipBoard(){
+        Transferable t = Toolkit.getDefaultToolkit().getSystemClipboard().getContents(null);
+        try {
+            if (t != null && t.isDataFlavorSupported(DataFlavor.stringFlavor)) {
+                String text = (String)t.getTransferData(DataFlavor.stringFlavor);
+                return text.trim();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return "";
+    }
+
+    public static boolean isValid(String url)
+    {
+        /* Try creating a valid URL */
+        try {
+            new URL(url).toURI();
+            return true;
+        }
+        // If there was an Exception
+        // while creating URL object
+        catch (Exception e) {
+            return false;
+        }
+    }
+
 }
+

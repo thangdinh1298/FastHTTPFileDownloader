@@ -1,23 +1,15 @@
-package JavafxClient;
+package JavafxClient.controller;
 
+import JavafxClient.DownloadModel;
+import JavafxClient.View.Dialog;
 import Util.Utils;
-import Util.Window;
-import com.sun.javafx.fxml.builder.JavaFXSceneBuilder;
-import javafx.beans.property.SimpleStringProperty;
-
-import javax.swing.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.concurrent.TimeUnit;
 
 public class DownloadController {
-//    public static ArrayList<DownloadModel> downloadModels = new ArrayList<>();
-
     private final String DAEMON_ADDR = "http://localhost:8080";
 
     private static final DownloadController INSTANCE = new DownloadController();
@@ -41,7 +33,6 @@ public class DownloadController {
             e.printStackTrace();
             Dialog.showDialog("Warning", e.getMessage());
         }
-//        Controller.updateTable();
     }
 
     public void getAllDownloads(){
@@ -119,7 +110,7 @@ public class DownloadController {
                 String id = downloadInfos[1];
                 String fileName = downloadInfos[2];
                 String speed = downloadInfos[3] +" "+ downloadInfos[4];
-                String timeLeft = downloadInfos[downloadInfos.length - 5];
+                String timeLeft = downloadInfos[5];
                 String status = downloadInfos[downloadInfos.length - 1];
                 String px = downloadInfos[downloadInfos.length -2];
                 DownloadModel downloadModel = new DownloadModel(id, fileName, speed, timeLeft,px, status);
@@ -128,10 +119,5 @@ public class DownloadController {
         } catch (IOException e) {
             System.out.println("IOException!");
         }
-
-    }
-
-    public static void main(String[] args) {
-        DownloadController.getInstance().getDownloadSpeed("-1");
     }
 }

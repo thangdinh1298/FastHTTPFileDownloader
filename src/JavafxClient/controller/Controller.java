@@ -1,10 +1,7 @@
-package JavafxClient;
+package JavafxClient.controller;
 
-
-import Downloaders.DownloadManager;
-import javafx.application.Application;
+import JavafxClient.DownloadModel;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -16,22 +13,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.Socket;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.ResourceBundle;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 public class Controller implements Initializable  {
     @FXML public Button pause;
@@ -49,7 +36,7 @@ public class Controller implements Initializable  {
 
     public void addURLButton(Event event) {
         try {
-            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("UrlPopup.fxml"));
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/JavafxClient/View/UrlPopup.fxml"));
             Parent root1 = (Parent) fxmlLoader.load();
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -60,16 +47,21 @@ public class Controller implements Initializable  {
         }
     }
 
-    public void pauseButton(Event event) {
+    public void pauseButton() {
         DownloadController.getInstance().pauseDownload(currentId);
+        resume.setDisable(false);
+        pause.setDisable(true);
     }
 
-    public void resumeButton(Event event) {
+    public void resumeButton() {
         DownloadController.getInstance().resumeDownload(currentId);
+        pause.setDisable(false);
+        resume.setDisable(true);
     }
 
-    public void deleteButton(Event event) {
+    public void deleteButton() {
         DownloadController.getInstance().deleteDownload(currentId);
+        downloadModels.remove(Integer.parseInt(currentId));
     }
 
     @Override
@@ -94,25 +86,24 @@ public class Controller implements Initializable  {
             TableRow<DownloadModel> row = new TableRow<>();
             row.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 1 && (! row.isEmpty()) ) {
-                    pause.setDisable(false);
-                    resume.setDisable(false);
                     delete.setDisable(false);
+                    pause.setDisable(false);
                     DownloadModel rowData = row.getItem();
+                    if (rowData.getStatusProperty().equalsIgnoreCase("PAUSED")) {
+                        resume.setDisable(false);
+                        pause.setDisable(true);
+                    }
+                    if (rowData.getStatusProperty().equalsIgnoreCase("COMPLETED")) {
+                        pause.setDisable(true);
+                        resume.setDisable(true);
+                    }
+
                     this.currentId = rowData.getIdProperty();
                     System.out.println("click on: "+currentId);
                 }
                 if (event.getClickCount() == 2 && (! row.isEmpty()) ) {
                     DownloadModel rowData = row.getItem();
-                    try {
-                        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("DetailDownload.fxml"));
-                        Parent root1 = (Parent) fxmlLoader.load();
-                        Stage stage = new Stage();
-                        stage.initModality(Modality.APPLICATION_MODAL);
-                        stage.setScene(new Scene(root1));
-                        stage.show();
-                    } catch(Exception e) {
-                        e.printStackTrace();
-                    }
+                    this.showDetailDownload(rowData);
                     System.out.println("Double click on: "+rowData.getIdProperty());
                 }
 
@@ -121,12 +112,26 @@ public class Controller implements Initializable  {
         });
     }
 
+    private void showDetailDownload(DownloadModel downloadModel) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/JavafxClient/View/DetailDownload.fxml"));
+            DetailDownloadController detailDownloadController = new DetailDownloadController();
+            fxmlLoader.setController(detailDownloadController);
+            detailDownloadController.setDownloadModel(downloadModel);
+            Parent root1 = (Parent) fxmlLoader.load();
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setScene(new Scene(root1));
+            stage.show();
+        } catch(Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     public final Runnable changeValues = () -> {
         while (true) {
             if (Thread.currentThread().isInterrupted()) break;
             DownloadController.getInstance().getDownloadSpeed("-1");
-//            tbData.getSelectionModel().selectedItemProperty().get();
-//            int index = tbData.getSelectionModel().selectedIndexProperty().get();
         }
     };
 
