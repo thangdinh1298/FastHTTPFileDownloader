@@ -1,7 +1,9 @@
 package JavafxClient.controller;
 
+import Util.Utils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
@@ -18,6 +20,8 @@ public class UrlPopupController implements Initializable {
     private TextField FileName;
     @FXML
     private Pane Popup;
+    @FXML
+    public Button addButton;
 
     public void buttonPressed() {
         try {
@@ -43,9 +47,22 @@ public class UrlPopupController implements Initializable {
 
     @Override
     public void initialize(URL url, ResourceBundle resourceBundle) {
-//        if (Utils.isValid(Utils.getClipBoard())) {
-//            Url.setText(Utils.getClipBoard());
-//        }
+        if (Utils.isValid(Utils.getClipBoard())) {
+            Url.setText(Utils.getClipBoard());
+        }
+        if (Utils.isValid(Utils.getClipBoard())) {
+            Url.setText(Utils.getClipBoard());
+        }
+        if (Url.getText().equalsIgnoreCase("")){
+            addButton.setDisable(true);
+        }
+
+        Url.textProperty().addListener((observable, oldValue, newValue) -> {
+            System.out.println("textfield changed from " + oldValue + " to " + newValue);
+            if (!newValue.equalsIgnoreCase("")) {
+                addButton.setDisable(false);
+            }
+        });
 
         DownloadDir.setText(System.getProperty("user.home") + "/Downloads/");
     }

@@ -114,6 +114,9 @@ public class DownloadController {
                 String status = downloadInfos[downloadInfos.length - 1];
                 String px = downloadInfos[downloadInfos.length -2];
                 DownloadModel downloadModel = new DownloadModel(id, fileName, speed, timeLeft,px, status);
+                if (Controller.isDeleted) {
+                    Controller.downloadModels.remove(Controller.deletedId);
+                }
                 Controller.addOrUpdate(i -1, downloadModel);
             }
         } catch (IOException e) {

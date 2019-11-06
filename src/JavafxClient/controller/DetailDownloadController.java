@@ -96,6 +96,10 @@ public class DetailDownloadController implements Initializable {
             @Override
             public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
                 Status.setText(newValue);
+                if (newValue.equalsIgnoreCase("COMPLETED")) {
+                    pause.setDisable(true);
+                    resume.setDisable(true);
+                }
             }
         });
     }

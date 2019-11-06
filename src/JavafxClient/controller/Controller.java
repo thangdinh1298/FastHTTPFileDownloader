@@ -33,6 +33,8 @@ public class Controller implements Initializable  {
     @FXML public TableColumn<DownloadModel, String> status;
 
     public String currentId;
+    public static boolean isDeleted;
+    public static int deletedId = -1;
 
     public void addURLButton(Event event) {
         try {
@@ -61,7 +63,12 @@ public class Controller implements Initializable  {
 
     public void deleteButton() {
         DownloadController.getInstance().deleteDownload(currentId);
-        downloadModels.remove(Integer.parseInt(currentId));
+//        downloadModels.remove(Integer.parseInt(currentId));
+        isDeleted = true;
+        deletedId = Integer.parseInt(currentId);
+        if (Controller.downloadModels.size() == 1) {
+            Controller.downloadModels.clear();
+        }
     }
 
     @Override

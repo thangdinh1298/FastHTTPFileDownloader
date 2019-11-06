@@ -10,7 +10,7 @@
       <TextField fx:id="Url" layoutX="156.0" layoutY="54.0" prefHeight="40.0" prefWidth="354.0" />
       <TextField fx:id="DownloadDir" layoutX="156.0" layoutY="111.0" prefHeight="40.0" prefWidth="354.0" />
       <TextField fx:id="FileName" layoutX="156.0" layoutY="166.0" prefHeight="40.0" prefWidth="354.0" />
-      <Button layoutX="33.0" layoutY="268.0" mnemonicParsing="false" onMouseClicked="#buttonPressed" text="Add" />
+      <Button fx:id="addButton" layoutX="33.0" layoutY="268.0" mnemonicParsing="false" onMouseClicked="#buttonPressed" text="Add" />
       <Button layoutX="443.0" layoutY="268.0" mnemonicParsing="false" onMouseClicked="#closedButton" text="Cancel" />
       <Label layoutX="15.0" layoutY="61.0" prefHeight="26.0" prefWidth="54.0" text="Url" />
       <Label layoutX="15.0" layoutY="118.0" text="DownloadDir" />
